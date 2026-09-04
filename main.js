@@ -66,7 +66,7 @@ function component(width, height, color, x, y,type){
  	this.x=x;
  	this.y=y;
  	this.update =  function(){
- 		ctx = area.context;
+ 		const ctx = area.context;
 	 	if(this.type=="image" || this.type=="background"){
 	 		ctx.drawImage(this.image, this.x,this.y,this.width,this.height);
 	 		if(this.type=="background") ctx.drawImage(this.image,this.x+this.width,this.y,this.width,this.height);
@@ -170,31 +170,31 @@ function updateArea(){
 	}
 	if(area.frameNo == 1 || everyInterval(myPiece.width*2)){
 	 	x = area.canvas.width;
-	 	minHeight=20;
-	 	maxHeight=300;
-	 	height=Math.floor(Math.random()*(maxHeight-minHeight+1)+minHeight);
-	 	minGap=20;
-	 	maxGap=300;
-	 	gap=Math.floor(Math.random()*(maxGap-minGap+1)+minGap);
+	 	const minHeight=20;
+	 	const maxHeight=300;
+	 	const height=Math.floor(Math.random()*(maxHeight-minHeight+1)+minHeight);
+	 	const minGap=20;
+	 	const maxGap=300;
+	 	const gap=Math.floor(Math.random()*(maxGap-minGap+1)+minGap);
 	 	build.push(new component(60,height,"build.png",x,500-height,"build"));
 	}
-	for(i=0; i<myObstacle.length;i++){
+	for(let i=0; i<myObstacle.length;i++){
 	 	myObstacle[i].x+=-3;
 	 	myObstacle[i].update();
 	}
-	for(i=0; i<clouds.length;i++){
+	for(let i=0; i<clouds.length;i++){
 	 	clouds[i].x+=-3;
 	 	clouds[i].update();
 	}
-	for(i=0; i<planes.length;i++){
+	for(let i=0; i<planes.length;i++){
 	 	planes[i].x+=-3;
 	 	planes[i].update();
 	}
-	for(i=0; i<anotherPlanes.length;i++){
+	for(let i=0; i<anotherPlanes.length;i++){
 	 	anotherPlanes[i].x+=-6;
 	 	anotherPlanes[i].update();
 	}
-	for(i=0; i<build.length;i++){
+	for(let i=0; i<build.length;i++){
 	 	build[i].x+=-2;
 	 	build[i].update();
 	}
@@ -223,8 +223,10 @@ function updateArea(){
 	}
 	myPiece.update();
 }
-moveUp = () => myPiece.speedY-=1;
-moveDown =() =>myPiece.speedY+=1;
-moveRight = () =>myPiece.speedX+=1;
-moveLeft = () =>myPiece.speedX-=1;
-stopMove = () => {myPiece.speedX=0; myPiece.speedY=0;}
+function moveUp() { myPiece.speedY -= 1; }
+function moveDown() { myPiece.speedY += 1; }
+function moveRight() { myPiece.speedX += 1; }
+function moveLeft() { myPiece.speedX -= 1; }
+function stopMove() { myPiece.speedX = 0; myPiece.speedY = 0; }
+
+startMove();
