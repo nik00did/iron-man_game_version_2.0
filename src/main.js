@@ -1,14 +1,19 @@
+import "./style.css";
+
+const ICONS = "/assets/icons";
+const SOUNDS = "/assets/sounds";
+
 let myPiece, myObstacle=[], clouds=[], myBackground, planes=[], anotherPlanes=[], build=[];
 let mySound, myMusic;
 let score=document.getElementById("score");
 let q = 0;
 function startMove(){
 	area.start();
-	myMusic = new Sound("First fight.mp3");
+	myMusic = new Sound(`${SOUNDS}/First fight.mp3`);
 	//myMusic.Play();
-	myPiece = new component(50,50,"iron-man.png",0,area.canvas.height/2,"image");
-	myBackground = new  component(1000,500,"bluesky4.png",0,0,"background");
-	mySound = new Sound("Love me again.mp3");
+	myPiece = new component(50,50,`${ICONS}/iron-man.png`,0,area.canvas.height/2,"image");
+	myBackground = new  component(1000,500,`${ICONS}/bluesky4.png`,0,0,"background");
+	mySound = new Sound(`${SOUNDS}/love me again.mp3`);
 }
 function Sound(src){
 	this.sound=document.createElement("audio");
@@ -151,22 +156,22 @@ function updateArea(){
 	if(area.frameNo == 1 || everyInterval(myPiece.width*10)){
 	 	x = area.canvas.width;
 	 	y = area.canvas.height-320;
-	 	myObstacle.push(new component(100,60,"cloud.png",x,y,"cloud"));
+	 	myObstacle.push(new component(100,60,`${ICONS}/cloud.png`,x,y,"cloud"));
 	}
 	if(area.frameNo == 1 || everyInterval(myPiece.width*8)){
 	 	x = area.canvas.width;
 	 	y = area.canvas.height-450;
-	 	clouds.push(new component(100,60,"cloud.png",x,y,"cloud"));
+	 	clouds.push(new component(100,60,`${ICONS}/cloud.png`,x,y,"cloud"));
 	}
 	if(area.frameNo == 1 || everyInterval(myPiece.width*11)){
 	 	x = area.canvas.width;
 	 	y = area.canvas.height-370;
-	 	planes.push(new component(80,30,"plane.png",x,y,"plane"));
+	 	planes.push(new component(80,30,`${ICONS}/plane.png`,x,y,"plane"));
 	}
 	if(area.frameNo == 1 || everyInterval(myPiece.width*15)){
 	 	x = area.canvas.width;
 	 	y = area.canvas.height-490;
-	 	anotherPlanes.push(new component(100,30,"plane.png",x,y,"plane"));
+	 	anotherPlanes.push(new component(100,30,`${ICONS}/plane.png`,x,y,"plane"));
 	}
 	if(area.frameNo == 1 || everyInterval(myPiece.width*2)){
 	 	x = area.canvas.width;
@@ -176,7 +181,7 @@ function updateArea(){
 	 	const minGap=20;
 	 	const maxGap=300;
 	 	const gap=Math.floor(Math.random()*(maxGap-minGap+1)+minGap);
-	 	build.push(new component(60,height,"build.png",x,500-height,"build"));
+	 	build.push(new component(60,height,`${ICONS}/build.png`,x,500-height,"build"));
 	}
 	for(let i=0; i<myObstacle.length;i++){
 	 	myObstacle[i].x+=-3;
@@ -202,22 +207,22 @@ function updateArea(){
 	myPiece.speedX=0;//
 	myPiece.speedY=0;//
 	if(area.key && area.key[37]) {
-		myPiece.image.src="iron-man(move-left).png";
+		myPiece.image.src=`${ICONS}/iron-man(move-left).png`;
 		myPiece.x=Math.max(myPiece.x,0);
 		myPiece.speedX-=4;
 	}
 	if(area.key && area.key[38]) {
-		myPiece.image.src="iron-man.png";
+		myPiece.image.src=`${ICONS}/iron-man.png`;
 		myPiece.y=Math.max(myPiece.y,0);
 		myPiece.speedY-=4;
 	}
 	if(area.key && area.key[39]) {
-		myPiece.image.src="iron-man(move).png";
+		myPiece.image.src=`${ICONS}/iron-man(move).png`;
 		myPiece.x=Math.min(myPiece.x,area.canvas.width-myPiece.width);
 		myPiece.speedX+=4;
 	}
 	if(area.key && area.key[40]) {
-		myPiece.image.src="iron-man(down).png";
+		myPiece.image.src=`${ICONS}/iron-man(down).png`;
 		myPiece.y = Math.min(myPiece.y,area.canvas.height-myPiece.height);
 		myPiece.speedY+=4;
 	}
