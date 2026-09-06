@@ -17,6 +17,8 @@ export default [
       semi: ["error", "never"],
       eqeqeq: ["error", "always"],
       indent: ["error", 4],
+      curly: ["error", "multi-or-nest"],
+      "nonblock-statement-body-position": ["error", "below"],
     },
   },
 ];

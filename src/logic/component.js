@@ -1,76 +1,32 @@
 import { SCEEN } from "../constants.js"
 
-export function component({ width, height, color, x, y, type }) {
-    this.type = type
+export class Component {
+    constructor({ width, height, color, x, y, type }) {
+        this.type = type // looks like not needed, because not used field here
+        this.color = color
+        this.width = width
+        this.height = height
+        this.speedX = 0
+        this.speedY = 0
+        this.x = x
+        this.y = y
 
-    if (
-        this.type === "image" ||
-        this.type === "background" ||
-        this.type === "cloud" ||
-        this.type === "plane" ||
-        this.type === "build"
-    ) {
         this.image = new Image()
         this.image.src = color
     }
 
-    this.width = width
-    this.height = height
-    this.speedX = 0
-    this.speedY = 0
-    this.x = x
-    this.y = y
-
-    this.update = function () {
+    update() {
         const ctx = SCEEN.area.context
-        if (this.type === "image" || this.type === "background") {
-            ctx.drawImage(this.image, this.x, this.y, this.width, this.height)
-            if (this.type === "background")
-                ctx.drawImage(
-                    this.image,
-                    this.x + this.width,
-                    this.y,
-                    this.width,
-                    this.height,
-                )
-        } else {
-            if (this.type === "cloud")
-                ctx.drawImage(
-                    this.image,
-                    this.x,
-                    this.y,
-                    this.width,
-                    this.height,
-                )
-            else if (this.type === "plane")
-                ctx.drawImage(
-                    this.image,
-                    this.x,
-                    this.y,
-                    this.width,
-                    this.height,
-                )
-            else if (this.type === "build")
-                ctx.drawImage(
-                    this.image,
-                    this.x,
-                    this.y,
-                    this.width,
-                    this.height,
-                )
-            else {
-                ctx.fillStyle = color
-                ctx.fillRect(this.x, this.y, this.width, this.height)
-            }
-        }
+
+        ctx.drawImage(this.image, this.x, this.y, this.width, this.height)
     }
 
-    this.newPos = function () {
+    newPos() {
         this.x += this.speedX
         this.y += this.speedY
     }
 
-    this.crashWith = function (obj) {
+    crashWith(obj) {
         let myleft = this.x
         let myright = this.x + this.width
         let mytop = this.y
@@ -92,7 +48,8 @@ export function component({ width, height, color, x, y, type }) {
         return crash
     }
 
-    this.Pos = () => {
-        if (this.type === "background") if (this.x === -this.width) this.x = 0
+    Pos() {
+        if (this.x === -this.width)
+            this.x = 0
     }
 }

@@ -1,12 +1,15 @@
 import { addAudioElement } from "../utils.js"
 
-export function Sound(src) {
-    this.sound = addAudioElement(src)
+export class Sound {
+    constructor(src) {
+        this.sound = addAudioElement(src)
+    }
 
-    this.Play = function () {
+    Play() {
         this.sound.play()
     }
-    this.stop = function () {
+
+    stop() {
         this.sound.pause()
     }
 }
