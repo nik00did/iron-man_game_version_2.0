@@ -7,16 +7,12 @@ export const CANVAS = {
 }
 
 export const SCEEN = {
-    myPiece: null,
-    myObstacle: [],
-    clouds: [],
-    planes: [],
-    anotherPlanes: [],
-    build: [],
+    character: null,
+    obstacles: [],
     area: null,
-    myBackground: null,
-    mySound: null,
-    myMusic: null,
+    background: null,
+    collisionSound: null,
+    music: null,
 }
 
 export const ICONS = {
@@ -24,7 +20,7 @@ export const ICONS = {
     PLANE: `${BASIC_ICON_PATH}/plane.png`,
     IMAGE: `${BASIC_ICON_PATH}/iron-man.png`,
     BACKGROUND: `${BASIC_ICON_PATH}/bluesky4.png`,
-    BUILD: `${BASIC_ICON_PATH}/build.png`,
+    BUILDING: `${BASIC_ICON_PATH}/building.png`,
     IRON_MAN: `${BASIC_ICON_PATH}/iron-man.png`,
     MOVE_LEFT: `${BASIC_ICON_PATH}/iron-man(move-left).png`,
     MOVE_RIGHT: `${BASIC_ICON_PATH}/iron-man(move).png`,
@@ -87,12 +83,11 @@ export const COMPONENT_TYPE = {
     PLANE: "plane",
     IMAGE: "image",
     BACKGROUND: "background",
-    BUILD: "build",
+    BUILDING: "building",
 }
 
 export const OBSTACLE_SPAWNS = [
     {
-        group: "myObstacle",
         speedX: -3,
         intervalFactor: 10,
         width: 100,
@@ -102,7 +97,6 @@ export const OBSTACLE_SPAWNS = [
         getY: (canvas) => canvas.height - 320,
     },
     {
-        group: "clouds",
         speedX: -3,
         intervalFactor: 8,
         width: 100,
@@ -112,7 +106,6 @@ export const OBSTACLE_SPAWNS = [
         getY: (canvas) => canvas.height - 450,
     },
     {
-        group: "planes",
         speedX: -3,
         intervalFactor: 11,
         width: 80,
@@ -122,7 +115,6 @@ export const OBSTACLE_SPAWNS = [
         getY: (canvas) => canvas.height - 370,
     },
     {
-        group: "anotherPlanes",
         speedX: -6,
         intervalFactor: 15,
         width: 100,
@@ -132,12 +124,11 @@ export const OBSTACLE_SPAWNS = [
         getY: (canvas) => canvas.height - 490,
     },
     {
-        group: "build",
         speedX: -2,
         intervalFactor: 2,
         width: 60,
-        color: ICONS.BUILD,
-        type: COMPONENT_TYPE.BUILD,
+        color: ICONS.BUILDING,
+        type: COMPONENT_TYPE.BUILDING,
         getHeight: () => {
             const minHeight = 20
             const maxHeight = 300

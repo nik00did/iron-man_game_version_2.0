@@ -6,10 +6,10 @@ import { Sound } from "./sound.js"
 export function initSceen(sceen) {
     sceen.area = new Area()
 
-    sceen.myMusic = new Sound(SOUNDS.FIRST_FIGHT)
-    sceen.mySound = new Sound(SOUNDS.LOVE_ME_AGAIN)
+    sceen.music = new Sound(SOUNDS.FIRST_FIGHT)
+    sceen.collisionSound = new Sound(SOUNDS.LOVE_ME_AGAIN)
 
-    sceen.myPiece = new Component({
+    sceen.character = new Component({
         width: 50,
         height: 50,
         color: ICONS.IRON_MAN,
@@ -17,7 +17,7 @@ export function initSceen(sceen) {
         y: CANVAS.height / 2,
         type: COMPONENT_TYPE.IMAGE,
     })
-    sceen.myBackground = new Component({
+    sceen.background = new Component({
         width: CANVAS.width,
         height: CANVAS.height,
         color: ICONS.BACKGROUND,

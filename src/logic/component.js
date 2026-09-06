@@ -1,12 +1,12 @@
 import { SCEEN } from "../constants.js"
 
 export class Component {
-    constructor({ width, height, color, x, y, type }) {
+    constructor({ width, height, color, x, y, type, speedX = 0 }) {
         this.type = type // looks like not needed, because not used field here
         this.color = color
         this.width = width
         this.height = height
-        this.speedX = 0
+        this.speedX = speedX
         this.speedY = 0
         this.x = x
         this.y = y

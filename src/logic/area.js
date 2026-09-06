@@ -36,18 +36,16 @@ const everyInterval = (n) =>
     !!((SCEEN.area.frameNo / n) % 1 === 0)
 
 const stopSceenItems = () => {
-    SCEEN.myMusic.stop()
-    SCEEN.mySound.Play()
+    SCEEN.music.stop()
+    SCEEN.collisionSound.Play()
     SCEEN.area.stop()
 }
 
 const handleObstacleCollision = () => {
-    for (const spawn of OBSTACLE_SPAWNS) {
-        for (const obstacle of SCEEN[spawn.group]) {
-            if (SCEEN.myPiece.crashWith(obstacle)) {
-                stopSceenItems()
-                return
-            }
+    for (const obstacle of SCEEN.obstacles) {
+        if (SCEEN.character.crashWith(obstacle)) {
+            stopSceenItems()
+            return
         }
     }
 }
@@ -56,15 +54,15 @@ const shouldAddObstacle = (interval) => {
     return SCEEN.area.frameNo === 1 || everyInterval(interval)
 }
 
-const generateNewObstacles = ({ area, myPiece }) => {
+const generateNewObstacles = ({ area, character }) => {
     for (const spawn of OBSTACLE_SPAWNS) {
-        if (!shouldAddObstacle(myPiece.width * spawn.intervalFactor)) 
+        if (!shouldAddObstacle(character.width * spawn.intervalFactor)) 
             continue
 
         const height = spawn.getHeight ? spawn.getHeight() : spawn.height
         const y = spawn.getY(area.canvas, height)
 
-        SCEEN[spawn.group].push(
+        SCEEN.obstacles.push(
             new Component({
                 width: spawn.width,
                 height,
@@ -72,21 +70,20 @@ const generateNewObstacles = ({ area, myPiece }) => {
                 x: area.canvas.width,
                 y,
                 type: spawn.type,
+                speedX: spawn.speedX,
             }),
         )
     }
 }
 
 const updateObstacles = () => {
-    for (const spawn of OBSTACLE_SPAWNS) {
-        for (const obstacle of SCEEN[spawn.group]) {
-            obstacle.x += spawn.speedX
-            obstacle.update()
-        }
+    for (const obstacle of SCEEN.obstacles) {
+        obstacle.x += obstacle.speedX
+        obstacle.update()
     }
 }
 
-const moveMyPiece = ({ area, myPiece }) => {
+const moveCharacter = ({ area, character }) => {
     if (!area.key)
         return
 
@@ -94,31 +91,31 @@ const moveMyPiece = ({ area, myPiece }) => {
         if (!area.key[move.key])
             continue
 
-        myPiece.image.src = move.icon
-        myPiece[move.axis] = move.clamp(myPiece, area.canvas)
-        myPiece[move.speedKey] += move.delta
+        character.image.src = move.icon
+        character[move.axis] = move.clamp(character, area.canvas)
+        character[move.speedKey] += move.delta
     }
 }
 
 function updateArea() {
-    const { myPiece, myMusic, myBackground, area } = SCEEN
+    const { character, music, background, area } = SCEEN
 
-    myMusic.Play()
+    music.Play()
 
     handleObstacleCollision()
 
     area.clear()
     area.frameNo += 1
-    myBackground.Pos()
-    myBackground.update()
+    background.Pos()
+    background.update()
 
-    generateNewObstacles({ area, myPiece })
+    generateNewObstacles({ area, character })
     updateObstacles()
 
-    myPiece.newPos()
-    myPiece.speedX = 0
-    myPiece.speedY = 0
-    moveMyPiece({ area, myPiece })
+    character.newPos()
+    character.speedX = 0
+    character.speedY = 0
+    moveCharacter({ area, character })
 
-    myPiece.update()
+    character.update()
 }
