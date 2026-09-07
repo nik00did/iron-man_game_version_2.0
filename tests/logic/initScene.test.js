@@ -17,6 +17,6 @@ describe("initScene", () => {
         initScene()
 
         expect(Scene).toHaveBeenCalledTimes(1)
-        expect(start).toHaveBeenCalledTimes(2)
+        expect(start).toHaveBeenCalledTimes(1)
     })
 })
