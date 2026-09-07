@@ -8,6 +8,20 @@ export const CANVAS = {
 
 export const TICK_MS = 20
 
+export const SCORE_HUD = {
+    STORAGE_KEY: "iron-man.topScores",
+    MAX_RECORDS: 3,
+    FONT: "20px sans-serif",
+    FONT_SIZE: 20,
+    SCORE_LABEL: "Your score",
+    SCORE_COLOR: "#000",
+    RANK_COLORS: ["red", "yellow", "green"],
+    SCORE_Y: 16,
+    RANK_X: 16,
+    RANK_Y: 16,
+    RANK_GAP: 8,
+}
+
 export const ICONS = {
     CLOUD: `${BASIC_ICON_PATH}/cloud.png`,
     PLANE: `${BASIC_ICON_PATH}/plane.png`,
