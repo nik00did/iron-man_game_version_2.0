@@ -11,6 +11,8 @@ import {
 import { SceneEntity } from "./sceneEntity.js"
 import { Background } from "./background.js"
 import { Sound } from "./sound.js"
+import { ScoreHud } from "./scoreHud.js"
+import { getTopScores, saveScore } from "../records.js"
 
 const ARROW_KEYS = new Set(Object.values(KEYS))
 
@@ -28,6 +30,9 @@ export class Scene {
         this.accumulator = 0
         this.musicStarted = false
         this.obstacles = []
+        this.scoreHud = new ScoreHud()
+        this.topScores = getTopScores()
+        this.scoreSeconds = 0
 
         this.music = new Sound(SOUNDS.FIRST_FIGHT)
         this.collisionSound = new Sound(SOUNDS.LOVE_ME_AGAIN)
@@ -115,7 +120,13 @@ export class Scene {
         return this.frameNo === 1 || this.everyInterval(interval)
     }
 
+    elapsedSeconds() {
+        return (this.frameNo * TICK_MS) / 1000
+    }
+
     stopOnCollision() {
+        this.scoreSeconds = this.elapsedSeconds()
+        this.topScores = saveScore(this.scoreSeconds)
         this.music.stop()
         this.collisionSound.play()
         this.stop()
@@ -183,6 +194,8 @@ export class Scene {
 
         this.clear()
         this.frameNo += 1
+        if (this.running)
+            this.scoreSeconds = this.elapsedSeconds()
         this.background.wrap()
         this.background.update(this.context)
 
@@ -195,5 +208,6 @@ export class Scene {
         this.moveCharacter()
 
         this.character.update(this.context)
+        this.scoreHud.draw(this.context, this.scoreSeconds, this.topScores)
     }
 }

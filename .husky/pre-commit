@@ -1,1 +1,3 @@
 npm test
+npm run lint
+printf '\033[32mESLint passed\033[0m\n'

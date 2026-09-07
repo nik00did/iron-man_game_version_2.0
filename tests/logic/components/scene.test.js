@@ -11,6 +11,9 @@ import {
 const Sound = jest.fn()
 const SceneEntity = jest.fn()
 const Background = jest.fn()
+const ScoreHud = jest.fn()
+const getTopScores = jest.fn()
+const saveScore = jest.fn()
 
 jest.unstable_mockModule("@src/logic/components/sound.js", () => ({
     Sound,
@@ -20,6 +23,13 @@ jest.unstable_mockModule("@src/logic/components/sceneEntity.js", () => ({
 }))
 jest.unstable_mockModule("@src/logic/components/background.js", () => ({
     Background,
+}))
+jest.unstable_mockModule("@src/logic/components/scoreHud.js", () => ({
+    ScoreHud,
+}))
+jest.unstable_mockModule("@src/logic/records.js", () => ({
+    getTopScores,
+    saveScore,
 }))
 
 const { Scene } = await import("@src/logic/components/scene.js")
@@ -63,10 +73,18 @@ describe("Scene", () => {
             wrap: jest.fn(),
             update: jest.fn(),
         }))
+        ScoreHud.mockImplementation(() => ({
+            draw: jest.fn(),
+        }))
+        getTopScores.mockReset()
+        saveScore.mockReset()
+        getTopScores.mockReturnValue([12.5, 8, 3])
+        saveScore.mockReturnValue([12.5, 8, 3])
 
         Sound.mockClear()
         SceneEntity.mockClear()
         Background.mockClear()
+        ScoreHud.mockClear()
 
         globalThis.document = {
             createElement: jest.fn(() => canvas),
@@ -115,6 +133,10 @@ describe("Scene", () => {
                 y: 0,
                 type: ENTITY_TYPE.BACKGROUND,
             })
+            expect(ScoreHud).toHaveBeenCalledTimes(1)
+            expect(getTopScores).toHaveBeenCalledTimes(1)
+            expect(scene.topScores).toEqual([12.5, 8, 3])
+            expect(scene.scoreSeconds).toBe(0)
             expect(scene.obstacles).toEqual([])
             expect(scene.running).toBe(false)
             expect(scene.musicStarted).toBe(false)
@@ -229,6 +251,7 @@ describe("Scene", () => {
 
             expect(scene.music.stop).toHaveBeenCalledTimes(1)
             expect(scene.collisionSound.play).toHaveBeenCalledTimes(1)
+            expect(saveScore).toHaveBeenCalledWith(scene.scoreSeconds)
             expect(scene.running).toBe(false)
             expect(cancelAnimationFrame).toHaveBeenCalledWith(77)
         })
@@ -452,6 +475,8 @@ describe("Scene", () => {
             scene.character.update.mockImplementation(() => order.push("char"))
             scene.character.speedX = 4
             scene.character.speedY = -2
+            scene.running = true
+            scene.scoreHud.draw.mockImplementation(() => order.push("hud"))
 
             scene.update()
 
@@ -465,12 +490,19 @@ describe("Scene", () => {
                 "newPos",
                 "move",
                 "char",
+                "hud",
             ])
             expect(scene.frameNo).toBe(1)
+            expect(scene.scoreSeconds).toBe(TICK_MS / 1000)
             expect(scene.character.speedX).toBe(0)
             expect(scene.character.speedY).toBe(0)
             expect(scene.background.update).toHaveBeenCalledWith(scene.context)
             expect(scene.character.update).toHaveBeenCalledWith(scene.context)
+            expect(scene.scoreHud.draw).toHaveBeenCalledWith(
+                scene.context,
+                scene.scoreSeconds,
+                scene.topScores,
+            )
         })
     })
 })
