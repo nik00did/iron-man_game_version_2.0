@@ -6,15 +6,21 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint src",
-    "lint:fix": "eslint src --fix",
-    "format": "prettier --write \"src/**/*.{js,css}\" \"index.html\""
+    "lint": "eslint src tests jest.config.js jest.globals.js",
+    "lint:fix": "eslint src tests jest.config.js jest.globals.js --fix",
+    "format": "prettier --write \"src/**/*.{js,css}\" \"tests/**/*.js\" \"index.html\" \"jest.config.js\" \"jest.globals.js\"",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "eslint": "^10.10.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.12.0",
+    "husky": "^9.1.7",
+    "jest": "^30.5.1",
+    "jest-environment-jsdom": "^30.5.1",
     "prettier": "^3.9.6",
     "vite": "^6.3.5"
   }
