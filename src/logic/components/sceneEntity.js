@@ -23,14 +23,14 @@ export class SceneEntity {
     }
 
     crashWith(obj) {
-        let myleft = this.x
-        let myright = this.x + this.width
-        let mytop = this.y
-        let mybottom = this.y + this.height
-        let objleft = obj.x
-        let objright = obj.x + obj.width
-        let objtop = obj.y
-        let objbottom = obj.y + obj.height
+        const myleft = this.x
+        const myright = this.x + this.width
+        const mytop = this.y
+        const mybottom = this.y + this.height
+        const objleft = obj.x
+        const objright = obj.x + obj.width
+        const objtop = obj.y
+        const objbottom = obj.y + obj.height
         let crash = true
 
         if (
