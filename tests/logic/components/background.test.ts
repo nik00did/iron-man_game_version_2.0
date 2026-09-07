@@ -1,7 +1,8 @@
 import { Background } from "@src/logic/components/background.js"
 import { SceneEntity } from "@src/logic/components/sceneEntity.js"
+import type { SceneEntityProps } from "@src/logic/components/sceneEntity.js"
 
-function createBackground(overrides = {}) {
+function createBackground(overrides: Partial<SceneEntityProps> = {}): Background {
     return new Background({
         width: 100,
         height: 50,
@@ -15,20 +16,23 @@ function createBackground(overrides = {}) {
 
 describe("Background", () => {
     beforeEach(() => {
-        globalThis.Image = jest.fn(() => ({ src: "" }))
+        Object.defineProperty(globalThis, "Image", {
+            configurable: true,
+            value: jest.fn(() => ({ src: "" })),
+        })
     })
 
     afterEach(() => {
-        delete globalThis.Image
+        Reflect.deleteProperty(globalThis, "Image")
     })
 
     describe("update", () => {
-        let superUpdate
+        let superUpdate: jest.SpyInstance
 
         beforeEach(() => {
             superUpdate = jest
                 .spyOn(SceneEntity.prototype, "update")
-                .mockImplementation(() => {})
+                .mockImplementation((): void => {})
         })
 
         afterEach(() => {
@@ -44,7 +48,7 @@ describe("Background", () => {
             })
             const ctx = { drawImage: jest.fn() }
 
-            background.update(ctx)
+            background.update(ctx as unknown as CanvasRenderingContext2D)
 
             expect(superUpdate).toHaveBeenCalledWith(ctx)
             expect(ctx.drawImage).toHaveBeenCalledTimes(1)

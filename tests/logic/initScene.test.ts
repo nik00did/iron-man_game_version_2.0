@@ -1,7 +1,7 @@
 const start = jest.fn()
-const Scene = jest.fn(() => ({ start }))
+const Scene = jest.fn((): { start: jest.Mock } => ({ start }))
 
-jest.unstable_mockModule("@src/logic/components/scene.js", () => ({
+jest.unstable_mockModule("@src/logic/components/scene.js", (): { Scene: jest.Mock } => ({
     Scene,
 }))
 

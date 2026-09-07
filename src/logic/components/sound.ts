@@ -1,17 +1,19 @@
 import { addAudioElement } from "../../utils.js"
 
 export class Sound {
-    constructor(src) {
+    audio: HTMLAudioElement
+
+    constructor(src: string) {
         this.audio = addAudioElement(src)
     }
 
-    play() {
+    play(): void {
         const playing = this.audio.play()
         if (playing)
-            playing.catch((e) => console.log(e))
+            playing.catch((e: unknown): void => console.log(e))
     }
 
-    stop() {
+    stop(): void {
         this.audio.pause()
     }
 }

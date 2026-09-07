@@ -1,32 +1,41 @@
 import { SCORE_HUD } from "@src/constants.js"
 import { getTopScores, saveScore } from "@src/logic/records.js"
 
+type StorageMock = {
+    getItem: jest.Mock
+    setItem: jest.Mock
+}
+
 describe("records", () => {
+    let storage: StorageMock
+
     beforeEach(() => {
-        globalThis.localStorage = {
+        storage = {
             getItem: jest.fn(),
             setItem: jest.fn(),
         }
+        Object.defineProperty(globalThis, "localStorage", {
+            configurable: true,
+            value: storage,
+        })
     })
 
     afterEach(() => {
-        delete globalThis.localStorage
+        Reflect.deleteProperty(globalThis, "localStorage")
     })
 
     describe("getTopScores", () => {
         it("returns an empty list when nothing is stored", () => {
-            localStorage.getItem.mockReturnValue(null)
+            storage.getItem.mockReturnValue(null)
 
             const result = getTopScores()
 
-            expect(localStorage.getItem).toHaveBeenCalledWith(
-                SCORE_HUD.STORAGE_KEY,
-            )
+            expect(storage.getItem).toHaveBeenCalledWith(SCORE_HUD.STORAGE_KEY)
             expect(result).toEqual([])
         })
 
         it("returns an empty list when stored value is empty", () => {
-            localStorage.getItem.mockReturnValue("")
+            storage.getItem.mockReturnValue("")
 
             const result = getTopScores()
 
@@ -34,7 +43,7 @@ describe("records", () => {
         })
 
         it("returns an empty list when JSON is invalid", () => {
-            localStorage.getItem.mockReturnValue("{not-json")
+            storage.getItem.mockReturnValue("{not-json")
 
             const result = getTopScores()
 
@@ -42,7 +51,7 @@ describe("records", () => {
         })
 
         it("returns an empty list when stored JSON is not an array", () => {
-            localStorage.getItem.mockReturnValue(JSON.stringify({ score: 1 }))
+            storage.getItem.mockReturnValue(JSON.stringify({ score: 1 }))
 
             const result = getTopScores()
 
@@ -50,9 +59,7 @@ describe("records", () => {
         })
 
         it("keeps finite numbers only and caps at max records", () => {
-            localStorage.getItem.mockReturnValue(
-                JSON.stringify([1, "x", 2, null, 3, 4]),
-            )
+            storage.getItem.mockReturnValue(JSON.stringify([1, "x", 2, null, 3, 4]))
 
             const result = getTopScores()
 
@@ -62,19 +69,19 @@ describe("records", () => {
 
     describe("saveScore", () => {
         it("appends, sorts descending, persists, and returns the top scores", () => {
-            localStorage.getItem.mockReturnValue(JSON.stringify([10, 5]))
+            storage.getItem.mockReturnValue(JSON.stringify([10, 5]))
 
             const result = saveScore(8)
 
             expect(result).toEqual([10, 8, 5])
-            expect(localStorage.setItem).toHaveBeenCalledWith(
+            expect(storage.setItem).toHaveBeenCalledWith(
                 SCORE_HUD.STORAGE_KEY,
                 JSON.stringify([10, 8, 5]),
             )
         })
 
         it("keeps only the top max records", () => {
-            localStorage.getItem.mockReturnValue(JSON.stringify([10, 9, 8]))
+            storage.getItem.mockReturnValue(JSON.stringify([10, 9, 8]))
 
             const result = saveScore(7)
 
@@ -82,7 +89,7 @@ describe("records", () => {
         })
 
         it("allows duplicate scores", () => {
-            localStorage.getItem.mockReturnValue(JSON.stringify([8]))
+            storage.getItem.mockReturnValue(JSON.stringify([8]))
 
             const result = saveScore(8)
 
@@ -90,8 +97,8 @@ describe("records", () => {
         })
 
         it("still returns the list when setItem throws", () => {
-            localStorage.getItem.mockReturnValue(JSON.stringify([10]))
-            localStorage.setItem.mockImplementation(() => {
+            storage.getItem.mockReturnValue(JSON.stringify([10]))
+            storage.setItem.mockImplementation((): never => {
                 throw new Error("quota")
             })
 
@@ -101,7 +108,7 @@ describe("records", () => {
         })
 
         it("does not keep a non-finite score", () => {
-            localStorage.getItem.mockReturnValue(JSON.stringify([10]))
+            storage.getItem.mockReturnValue(JSON.stringify([10]))
 
             const result = saveScore(Number.NaN)
 

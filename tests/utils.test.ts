@@ -1,25 +1,34 @@
 import { addAudioElement } from "@src/utils.js"
 
+type AudioMock = {
+    src: string
+    setAttribute: jest.Mock
+    style: { display?: string }
+}
+
 const SRC = "sound.mp3"
 
 describe("addAudioElement", () => {
-    let setAttribute
-    let appendChild
-    let audio
+    let setAttribute: jest.Mock
+    let appendChild: jest.Mock
+    let audio: AudioMock
 
     beforeEach(() => {
         setAttribute = jest.fn()
         appendChild = jest.fn()
         audio = { src: "", setAttribute, style: {} }
 
-        globalThis.document = {
-            createElement: jest.fn(() => audio),
-            body: { appendChild },
-        }
+        Object.defineProperty(globalThis, "document", {
+            configurable: true,
+            value: {
+                createElement: jest.fn(() => audio),
+                body: { appendChild },
+            },
+        })
     })
 
     afterEach(() => {
-        delete globalThis.document
+        Reflect.deleteProperty(globalThis, "document")
     })
 
     it("creates a hidden audio element, configures it, and appends it to the body", () => {

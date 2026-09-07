@@ -1,12 +1,27 @@
 import { SCORE_HUD } from "@src/constants.js"
 import { ScoreHud } from "@src/logic/components/scoreHud.js"
 
-function createCtx() {
+type HudCtx = {
+    canvas: { width: number }
+    save: jest.Mock
+    restore: jest.Mock
+    fillText: jest.Mock
+    font: string
+    textBaseline: string
+    fillStyle: string
+    textAlign: string
+}
+
+function createCtx(): HudCtx {
     return {
         canvas: { width: 1000 },
         save: jest.fn(),
         restore: jest.fn(),
         fillText: jest.fn(),
+        font: "",
+        textBaseline: "",
+        fillStyle: "",
+        textAlign: "",
     }
 }
 
@@ -16,7 +31,7 @@ describe("ScoreHud", () => {
             const hud = new ScoreHud()
             const ctx = createCtx()
 
-            hud.drawScore(ctx, 11.23)
+            hud.drawScore(ctx as unknown as CanvasRenderingContext2D, 11.23)
 
             expect(ctx.font).toBe(SCORE_HUD.FONT)
             expect(ctx.textBaseline).toBe("top")
@@ -37,7 +52,7 @@ describe("ScoreHud", () => {
             const topScores = [10, 8, 3]
             const lineHeight = SCORE_HUD.FONT_SIZE + SCORE_HUD.RANK_GAP
 
-            hud.drawRating(ctx, topScores)
+            hud.drawRating(ctx as unknown as CanvasRenderingContext2D, topScores)
 
             expect(ctx.textAlign).toBe("left")
             expect(ctx.fillText).toHaveBeenCalledTimes(3)
@@ -66,15 +81,15 @@ describe("ScoreHud", () => {
             const hud = new ScoreHud()
             const ctx = createCtx()
 
-            hud.drawRating(ctx, [])
+            hud.drawRating(ctx as unknown as CanvasRenderingContext2D, [])
 
             expect(ctx.fillText).not.toHaveBeenCalled()
         })
     })
 
     describe("draw", () => {
-        let drawScore
-        let drawRating
+        let drawScore: jest.SpyInstance
+        let drawRating: jest.SpyInstance
 
         afterEach(() => {
             drawScore.mockRestore()
@@ -85,12 +100,16 @@ describe("ScoreHud", () => {
             const hud = new ScoreHud()
             const ctx = createCtx()
             const topScores = [10, 8]
-            drawScore = jest.spyOn(hud, "drawScore").mockImplementation(() => {})
+            drawScore = jest.spyOn(hud, "drawScore").mockImplementation((): void => {})
             drawRating = jest
                 .spyOn(hud, "drawRating")
-                .mockImplementation(() => {})
+                .mockImplementation((): void => {})
 
-            hud.draw(ctx, 11.23, topScores)
+            hud.draw(
+                ctx as unknown as CanvasRenderingContext2D,
+                11.23,
+                topScores,
+            )
 
             expect(ctx.save).toHaveBeenCalledTimes(1)
             expect(drawScore).toHaveBeenCalledWith(ctx, 11.23)

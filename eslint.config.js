@@ -1,6 +1,7 @@
-import js from "@eslint/js";
-import globals from "globals";
-import prettier from "eslint-config-prettier";
+import js from "@eslint/js"
+import globals from "globals"
+import prettier from "eslint-config-prettier"
+import tseslint from "typescript-eslint"
 
 const sharedRules = {
     semi: ["error", "never"],
@@ -11,18 +12,37 @@ const sharedRules = {
     "prefer-const": "error",
 }
 
-export default [
+export default tseslint.config(
     { ignores: ["dist", "node_modules", "coverage"] },
     js.configs.recommended,
     prettier,
     {
-        files: ["src/**/*.js"],
+        files: ["src/**/*.ts"],
+        extends: [tseslint.configs.recommended],
         languageOptions: {
             ecmaVersion: "latest",
             sourceType: "module",
             globals: globals.browser,
         },
         rules: sharedRules,
+    },
+    {
+        files: ["tests/**/*.ts"],
+        extends: [tseslint.configs.recommended],
+        languageOptions: {
+            ecmaVersion: "latest",
+            sourceType: "module",
+            globals: {
+                ...globals.node,
+                ...globals.jest,
+                ...globals.browser,
+            },
+        },
+        rules: {
+            ...sharedRules,
+            "@typescript-eslint/no-empty-function": "off",
+            "@typescript-eslint/no-explicit-any": "off",
+        },
     },
     {
         files: ["tests/**/*.js", "jest.config.js", "jest.globals.js"],
@@ -37,4 +57,4 @@ export default [
         },
         rules: sharedRules,
     },
-]
+)
