@@ -1,5 +1,4 @@
-// audio utils
-export function addAudioElement(src) {
+export function addAudioElement(src: string): HTMLAudioElement {
     const audioSound = document.createElement("audio")
 
     audioSound.src = src

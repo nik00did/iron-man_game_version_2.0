@@ -1,11 +1,11 @@
 import { SCORE_HUD } from "../../constants.js"
 
-function formatTime(seconds) {
+function formatTime(seconds: number): string {
     return `${seconds.toFixed(2)}s`
 }
 
 export class ScoreHud {
-    drawScore(ctx, currentSeconds) {
+    drawScore(ctx: CanvasRenderingContext2D, currentSeconds: number): void {
         ctx.font = SCORE_HUD.FONT
         ctx.textBaseline = "top"
 
@@ -18,11 +18,12 @@ export class ScoreHud {
         )
     }
 
-    drawRating(ctx, topScores) {
+    drawRating(ctx: CanvasRenderingContext2D, topScores: number[]): void {
         ctx.textAlign = "left"
         for (let index = 0; index < topScores.length; index += 1) {
             const score = topScores[index]
-            ctx.fillStyle = SCORE_HUD.RANK_COLORS[index]
+            ctx.fillStyle =
+                SCORE_HUD.RANK_COLORS[index] ?? SCORE_HUD.SCORE_COLOR
             ctx.fillText(
                 `${index + 1}. ${formatTime(score)}`,
                 SCORE_HUD.RANK_X,
@@ -31,7 +32,11 @@ export class ScoreHud {
         }
     }
 
-    draw(ctx, currentSeconds, topScores) {
+    draw(
+        ctx: CanvasRenderingContext2D,
+        currentSeconds: number,
+        topScores: number[],
+    ): void {
         ctx.save()
 
         this.drawScore(ctx, currentSeconds)

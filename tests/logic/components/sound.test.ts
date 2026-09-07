@@ -1,6 +1,11 @@
+type AudioMock = {
+    play: jest.Mock
+    pause: jest.Mock
+}
+
 const addAudioElement = jest.fn()
 
-jest.unstable_mockModule("@src/utils.js", () => ({
+jest.unstable_mockModule("@src/utils.js", (): { addAudioElement: jest.Mock } => ({
     addAudioElement,
 }))
 
@@ -9,9 +14,9 @@ const { Sound } = await import("@src/logic/components/sound.js")
 const SRC = "fight.mp3"
 
 describe("Sound", () => {
-    let play
-    let pause
-    let audio
+    let play: jest.Mock
+    let pause: jest.Mock
+    let audio: AudioMock
 
     beforeEach(() => {
         play = jest.fn()

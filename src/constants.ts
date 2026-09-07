@@ -1,3 +1,41 @@
+export type MovablePiece = {
+    x: number
+    y: number
+    width: number
+    height: number
+}
+
+export type CanvasSize = {
+    width: number
+    height: number
+}
+
+export type PlayerMove = {
+    key: string
+    icon: string
+    axis: "x" | "y"
+    speedKey: "speedX" | "speedY"
+    delta: number
+    clamp: (piece: MovablePiece, canvas: CanvasSize) => number
+}
+
+type ObstacleSpawnBase = {
+    speedX: number
+    intervalFactor: number
+    width: number
+    color: string
+    type: string
+    getY: (canvas: CanvasSize, height?: number) => number
+}
+
+export type ObstacleSpawn =
+    | (ObstacleSpawnBase & {
+          height: number
+      })
+    | (ObstacleSpawnBase & {
+          getHeight: () => number
+      })
+
 export const BASIC_ICON_PATH = "/assets/icons"
 export const BASIC_SOUND_PATH = "/assets/sounds"
 
@@ -47,14 +85,14 @@ export const KEYS = {
     DOWN: "ArrowDown",
 }
 
-export const PLAYER_MOVES = [
+export const PLAYER_MOVES: PlayerMove[] = [
     {
         key: KEYS.LEFT,
         icon: ICONS.MOVE_LEFT,
         axis: "x",
         speedKey: "speedX",
         delta: -4,
-        clamp: (piece) => Math.max(piece.x, 0),
+        clamp: (piece): number => Math.max(piece.x, 0),
     },
     {
         key: KEYS.UP,
@@ -62,7 +100,7 @@ export const PLAYER_MOVES = [
         axis: "y",
         speedKey: "speedY",
         delta: -4,
-        clamp: (piece) => Math.max(piece.y, 0),
+        clamp: (piece): number => Math.max(piece.y, 0),
     },
     {
         key: KEYS.RIGHT,
@@ -70,7 +108,7 @@ export const PLAYER_MOVES = [
         axis: "x",
         speedKey: "speedX",
         delta: 4,
-        clamp: (piece, canvas) =>
+        clamp: (piece, canvas): number =>
             Math.min(piece.x, canvas.width - piece.width),
     },
     {
@@ -79,7 +117,7 @@ export const PLAYER_MOVES = [
         axis: "y",
         speedKey: "speedY",
         delta: 4,
-        clamp: (piece, canvas) =>
+        clamp: (piece, canvas): number =>
             Math.min(piece.y, canvas.height - piece.height),
     },
 ]
@@ -92,7 +130,7 @@ export const ENTITY_TYPE = {
     BUILDING: "building",
 }
 
-export const OBSTACLE_SPAWNS = [
+export const OBSTACLE_SPAWNS: ObstacleSpawn[] = [
     {
         speedX: -3,
         intervalFactor: 10,
@@ -100,7 +138,7 @@ export const OBSTACLE_SPAWNS = [
         height: 60,
         color: ICONS.CLOUD,
         type: ENTITY_TYPE.CLOUD,
-        getY: (canvas) => canvas.height - 320,
+        getY: (canvas): number => canvas.height - 320,
     },
     {
         speedX: -3,
@@ -109,7 +147,7 @@ export const OBSTACLE_SPAWNS = [
         height: 60,
         color: ICONS.CLOUD,
         type: ENTITY_TYPE.CLOUD,
-        getY: (canvas) => canvas.height - 450,
+        getY: (canvas): number => canvas.height - 450,
     },
     {
         speedX: -3,
@@ -118,7 +156,7 @@ export const OBSTACLE_SPAWNS = [
         height: 30,
         color: ICONS.PLANE,
         type: ENTITY_TYPE.PLANE,
-        getY: (canvas) => canvas.height - 370,
+        getY: (canvas): number => canvas.height - 370,
     },
     {
         speedX: -6,
@@ -127,7 +165,7 @@ export const OBSTACLE_SPAWNS = [
         height: 30,
         color: ICONS.PLANE,
         type: ENTITY_TYPE.PLANE,
-        getY: (canvas) => canvas.height - 490,
+        getY: (canvas): number => canvas.height - 490,
     },
     {
         speedX: -2,
@@ -135,13 +173,13 @@ export const OBSTACLE_SPAWNS = [
         width: 60,
         color: ICONS.BUILDING,
         type: ENTITY_TYPE.BUILDING,
-        getHeight: () => {
+        getHeight: (): number => {
             const minHeight = 20
             const maxHeight = 300
             return Math.floor(
                 Math.random() * (maxHeight - minHeight + 1) + minHeight,
             )
         },
-        getY: (canvas, height) => canvas.height - height,
+        getY: (canvas, height = 0): number => canvas.height - height,
     },
 ]

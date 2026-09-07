@@ -1,7 +1,7 @@
 import { SceneEntity } from "./sceneEntity.js"
 
 export class Background extends SceneEntity {
-    update(ctx) {
+    update(ctx: CanvasRenderingContext2D): void {
         super.update(ctx)
         ctx.drawImage(
             this.image,
@@ -12,7 +12,7 @@ export class Background extends SceneEntity {
         )
     }
 
-    wrap() {
+    wrap(): void {
         if (this.x === -this.width)
             this.x = 0
     }

@@ -14,14 +14,35 @@ import { Sound } from "./sound.js"
 import { ScoreHud } from "./scoreHud.js"
 import { getTopScores, saveScore } from "../records.js"
 
-const ARROW_KEYS = new Set(Object.values(KEYS))
+const ARROW_KEYS = new Set<string>(Object.values(KEYS))
 
 export class Scene {
+    canvas: HTMLCanvasElement
+    context: CanvasRenderingContext2D
+    key: Record<string, boolean> | null
+    frameNo: number
+    rafId: number | null
+    running: boolean
+    lastTime: number
+    accumulator: number
+    musicStarted: boolean
+    obstacles: SceneEntity[]
+    scoreHud: ScoreHud
+    topScores: number[]
+    scoreSeconds: number
+    music: Sound
+    collisionSound: Sound
+    character: SceneEntity
+    background: Background
+
     constructor() {
         this.canvas = document.createElement("canvas")
         this.canvas.width = CANVAS.width
         this.canvas.height = CANVAS.height
-        this.context = this.canvas.getContext("2d")
+        const context = this.canvas.getContext("2d")
+        if (!context)
+            throw new Error("2d canvas context is not available")
+        this.context = context
         this.key = {}
         this.frameNo = 0
         this.rafId = null
@@ -55,37 +76,39 @@ export class Scene {
         })
     }
 
-    start() {
+    start(): void {
         document.body.insertBefore(this.canvas, document.body.childNodes[0])
         this.running = true
         this.lastTime = 0
         this.accumulator = 0
-        this.rafId = requestAnimationFrame((time) => this.tick(time))
+        this.rafId = requestAnimationFrame((time: number): void => this.tick(time))
 
-        window.addEventListener("keydown", (e) => {
+        window.addEventListener("keydown", (e: KeyboardEvent): void => {
             if (ARROW_KEYS.has(e.key))
                 e.preventDefault()
-            this.key[e.key] = true
+            if (this.key)
+                this.key[e.key] = true
             this.startMusic()
         })
-        window.addEventListener("keyup", (e) => {
-            this.key[e.key] = false
+        window.addEventListener("keyup", (e: KeyboardEvent): void => {
+            if (this.key)
+                this.key[e.key] = false
         })
-        this.canvas.addEventListener("pointerdown", () => this.startMusic())
+        this.canvas.addEventListener("pointerdown", (): void => this.startMusic())
     }
 
-    startMusic() {
+    startMusic(): void {
         if (this.musicStarted)
             return
         this.musicStarted = true
         this.music.play()
     }
 
-    tick(time) {
+    tick(time: number): void {
         if (!this.running)
             return
 
-        this.rafId = requestAnimationFrame((nextTime) => this.tick(nextTime))
+        this.rafId = requestAnimationFrame((nextTime: number): void => this.tick(nextTime))
 
         if (!this.lastTime) {
             this.lastTime = time
@@ -102,29 +125,29 @@ export class Scene {
         }
     }
 
-    clear() {
+    clear(): void {
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
     }
 
-    stop() {
+    stop(): void {
         this.running = false
         if (this.rafId)
             cancelAnimationFrame(this.rafId)
     }
 
-    everyInterval(n) {
+    everyInterval(n: number): boolean {
         return !!((this.frameNo / n) % 1 === 0)
     }
 
-    shouldAddObstacle(interval) {
+    shouldAddObstacle(interval: number): boolean {
         return this.frameNo === 1 || this.everyInterval(interval)
     }
 
-    elapsedSeconds() {
+    elapsedSeconds(): number {
         return (this.frameNo * TICK_MS) / 1000
     }
 
-    stopOnCollision() {
+    stopOnCollision(): void {
         this.scoreSeconds = this.elapsedSeconds()
         this.topScores = saveScore(this.scoreSeconds)
         this.music.stop()
@@ -132,7 +155,7 @@ export class Scene {
         this.stop()
     }
 
-    handleObstacleCollision() {
+    handleObstacleCollision(): void {
         for (const obstacle of this.obstacles) {
             if (this.character.crashWith(obstacle)) {
                 this.stopOnCollision()
@@ -141,12 +164,13 @@ export class Scene {
         }
     }
 
-    generateNewObstacles() {
+    generateNewObstacles(): void {
         for (const spawn of OBSTACLE_SPAWNS) {
             if (!this.shouldAddObstacle(this.character.width * spawn.intervalFactor))
                 continue
 
-            const height = spawn.getHeight ? spawn.getHeight() : spawn.height
+            const height =
+                "getHeight" in spawn ? spawn.getHeight() : spawn.height
             const y = spawn.getY(this.canvas, height)
 
             this.obstacles.push(
@@ -163,19 +187,19 @@ export class Scene {
         }
     }
 
-    updateObstacles() {
+    updateObstacles(): void {
         for (const obstacle of this.obstacles)
             obstacle.x += obstacle.speedX
 
         this.obstacles = this.obstacles.filter(
-            (obstacle) => obstacle.x + obstacle.width > 0,
+            (obstacle): boolean => obstacle.x + obstacle.width > 0,
         )
 
         for (const obstacle of this.obstacles)
             obstacle.update(this.context)
     }
 
-    moveCharacter() {
+    moveCharacter(): void {
         if (!this.key)
             return
 
@@ -189,7 +213,7 @@ export class Scene {
         }
     }
 
-    update() {
+    update(): void {
         this.handleObstacleCollision()
 
         this.clear()

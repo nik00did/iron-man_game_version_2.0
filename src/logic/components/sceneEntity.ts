@@ -1,5 +1,32 @@
+export type SceneEntityProps = {
+    width: number
+    height: number
+    color: string
+    x: number
+    y: number
+    type: string
+    speedX?: number
+}
+
+export type Box = {
+    x: number
+    y: number
+    width: number
+    height: number
+}
+
 export class SceneEntity {
-    constructor({ width, height, color, x, y, type, speedX = 0 }) {
+    type: string
+    color: string
+    width: number
+    height: number
+    speedX: number
+    speedY: number
+    x: number
+    y: number
+    image: HTMLImageElement
+
+    constructor({ width, height, color, x, y, type, speedX = 0 }: SceneEntityProps) {
         this.type = type
         this.color = color
         this.width = width
@@ -13,16 +40,16 @@ export class SceneEntity {
         this.image.src = color
     }
 
-    update(ctx) {
+    update(ctx: CanvasRenderingContext2D): void {
         ctx.drawImage(this.image, this.x, this.y, this.width, this.height)
     }
 
-    newPos() {
+    newPos(): void {
         this.x += this.speedX
         this.y += this.speedY
     }
 
-    crashWith(obj) {
+    crashWith(obj: Box): boolean {
         const myleft = this.x
         const myright = this.x + this.width
         const mytop = this.y

@@ -1,6 +1,7 @@
 import { SceneEntity } from "@src/logic/components/sceneEntity.js"
+import type { Box, SceneEntityProps } from "@src/logic/components/sceneEntity.js"
 
-function createEntity(overrides = {}) {
+function createEntity(overrides: Partial<SceneEntityProps> = {}): SceneEntity {
     return new SceneEntity({
         width: 10,
         height: 10,
@@ -12,17 +13,20 @@ function createEntity(overrides = {}) {
     })
 }
 
-function box(x, y, width = 10, height = 10) {
+function box(x: number, y: number, width = 10, height = 10): Box {
     return { x, y, width, height }
 }
 
 describe("SceneEntity", () => {
     beforeEach(() => {
-        globalThis.Image = jest.fn(() => ({ src: "" }))
+        Object.defineProperty(globalThis, "Image", {
+            configurable: true,
+            value: jest.fn(() => ({ src: "" })),
+        })
     })
 
     afterEach(() => {
-        delete globalThis.Image
+        Reflect.deleteProperty(globalThis, "Image")
     })
 
     describe("constructor", () => {
@@ -66,7 +70,7 @@ describe("SceneEntity", () => {
             const entity = createEntity({ x: 8, y: 12, width: 20, height: 30 })
             const ctx = { drawImage: jest.fn() }
 
-            entity.update(ctx)
+            entity.update(ctx as unknown as CanvasRenderingContext2D)
 
             expect(ctx.drawImage).toHaveBeenCalledTimes(1)
             expect(ctx.drawImage).toHaveBeenCalledWith(

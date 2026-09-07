@@ -8,13 +8,15 @@
     "preview": "vite preview",
     "lint": "eslint src tests jest.config.js jest.globals.js",
     "lint:fix": "eslint src tests jest.config.js jest.globals.js --fix",
-    "format": "prettier --write \"src/**/*.{js,css}\" \"tests/**/*.js\" \"index.html\" \"jest.config.js\" \"jest.globals.js\"",
+    "format": "prettier --write \"src/**/*.{ts,css}\" \"tests/**/*.ts\" \"index.html\" \"jest.config.js\" \"jest.globals.js\" \"tsconfig.json\"",
+    "typecheck": "tsc --noEmit",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "prepare": "husky"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/jest": "^30.0.0",
     "eslint": "^10.10.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.12.0",
@@ -22,6 +24,9 @@
     "jest": "^30.5.1",
     "jest-environment-jsdom": "^30.5.1",
     "prettier": "^3.9.6",
+    "ts-jest": "^29.4.12",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.70.0",
     "vite": "^6.3.5"
   }
 }
