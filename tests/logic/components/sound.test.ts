@@ -1,6 +1,7 @@
 type AudioMock = {
     play: jest.Mock
     pause: jest.Mock
+    currentTime: number
 }
 
 const addAudioElement = jest.fn()
@@ -21,7 +22,7 @@ describe("Sound", () => {
     beforeEach(() => {
         play = jest.fn()
         pause = jest.fn()
-        audio = { play, pause }
+        audio = { play, pause, currentTime: 12 }
         addAudioElement.mockReset()
         addAudioElement.mockReturnValue(audio)
     })
@@ -66,5 +67,14 @@ describe("Sound", () => {
         sound.stop()
 
         expect(pause).toHaveBeenCalledTimes(1)
+    })
+
+    it("playFromStart() rewinds then plays", () => {
+        const sound = new Sound(SRC)
+
+        sound.playFromStart()
+
+        expect(audio.currentTime).toBe(0)
+        expect(play).toHaveBeenCalledTimes(1)
     })
 })

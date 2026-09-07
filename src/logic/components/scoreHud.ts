@@ -20,6 +20,7 @@ export class ScoreHud {
 
     drawRating(ctx: CanvasRenderingContext2D, topScores: number[]): void {
         ctx.textAlign = "left"
+
         for (let index = 0; index < topScores.length; index += 1) {
             const score = topScores[index]
             ctx.fillStyle =
