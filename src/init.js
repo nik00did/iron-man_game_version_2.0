@@ -1,5 +1,4 @@
 import "./style.css"
-import { initSceen } from "./logic/initSceen.js"
-import { SCEEN } from "./constants.js"
+import { initScene } from "./logic/initScene.js"
 
-initSceen(SCEEN)
+initScene()

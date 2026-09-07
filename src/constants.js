@@ -6,14 +6,7 @@ export const CANVAS = {
     height: 500,
 }
 
-export const SCEEN = {
-    character: null,
-    obstacles: [],
-    area: null,
-    background: null,
-    collisionSound: null,
-    music: null,
-}
+export const TICK_MS = 20
 
 export const ICONS = {
     CLOUD: `${BASIC_ICON_PATH}/cloud.png`,
@@ -33,16 +26,16 @@ export const SOUNDS = {
     LOVE_ME_AGAIN: `${BASIC_SOUND_PATH}/love me again.mp3`,
 }
 
-export const KEY_CODES = {
-    LEFT: 37,
-    UP: 38,
-    RIGHT: 39,
-    DOWN: 40,
+export const KEYS = {
+    LEFT: "ArrowLeft",
+    UP: "ArrowUp",
+    RIGHT: "ArrowRight",
+    DOWN: "ArrowDown",
 }
 
 export const PLAYER_MOVES = [
     {
-        key: KEY_CODES.LEFT,
+        key: KEYS.LEFT,
         icon: ICONS.MOVE_LEFT,
         axis: "x",
         speedKey: "speedX",
@@ -50,7 +43,7 @@ export const PLAYER_MOVES = [
         clamp: (piece) => Math.max(piece.x, 0),
     },
     {
-        key: KEY_CODES.UP,
+        key: KEYS.UP,
         icon: ICONS.MOVE_UP,
         axis: "y",
         speedKey: "speedY",
@@ -58,7 +51,7 @@ export const PLAYER_MOVES = [
         clamp: (piece) => Math.max(piece.y, 0),
     },
     {
-        key: KEY_CODES.RIGHT,
+        key: KEYS.RIGHT,
         icon: ICONS.MOVE_RIGHT,
         axis: "x",
         speedKey: "speedX",
@@ -67,7 +60,7 @@ export const PLAYER_MOVES = [
             Math.min(piece.x, canvas.width - piece.width),
     },
     {
-        key: KEY_CODES.DOWN,
+        key: KEYS.DOWN,
         icon: ICONS.MOVE_DOWN,
         axis: "y",
         speedKey: "speedY",
@@ -77,11 +70,10 @@ export const PLAYER_MOVES = [
     },
 ]
 
-
-export const COMPONENT_TYPE = {
+export const ENTITY_TYPE = {
     CLOUD: "cloud",
     PLANE: "plane",
-    IMAGE: "image",
+    CHARACTER: "character",
     BACKGROUND: "background",
     BUILDING: "building",
 }
@@ -93,7 +85,7 @@ export const OBSTACLE_SPAWNS = [
         width: 100,
         height: 60,
         color: ICONS.CLOUD,
-        type: COMPONENT_TYPE.CLOUD,
+        type: ENTITY_TYPE.CLOUD,
         getY: (canvas) => canvas.height - 320,
     },
     {
@@ -102,7 +94,7 @@ export const OBSTACLE_SPAWNS = [
         width: 100,
         height: 60,
         color: ICONS.CLOUD,
-        type: COMPONENT_TYPE.CLOUD,
+        type: ENTITY_TYPE.CLOUD,
         getY: (canvas) => canvas.height - 450,
     },
     {
@@ -111,7 +103,7 @@ export const OBSTACLE_SPAWNS = [
         width: 80,
         height: 30,
         color: ICONS.PLANE,
-        type: COMPONENT_TYPE.PLANE,
+        type: ENTITY_TYPE.PLANE,
         getY: (canvas) => canvas.height - 370,
     },
     {
@@ -120,7 +112,7 @@ export const OBSTACLE_SPAWNS = [
         width: 100,
         height: 30,
         color: ICONS.PLANE,
-        type: COMPONENT_TYPE.PLANE,
+        type: ENTITY_TYPE.PLANE,
         getY: (canvas) => canvas.height - 490,
     },
     {
@@ -128,7 +120,7 @@ export const OBSTACLE_SPAWNS = [
         intervalFactor: 2,
         width: 60,
         color: ICONS.BUILDING,
-        type: COMPONENT_TYPE.BUILDING,
+        type: ENTITY_TYPE.BUILDING,
         getHeight: () => {
             const minHeight = 20
             const maxHeight = 300
