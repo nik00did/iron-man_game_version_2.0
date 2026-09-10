@@ -10,6 +10,20 @@ const sharedRules = {
     curly: ["error", "multi-or-nest"],
     "nonblock-statement-body-position": ["error", "below"],
     "prefer-const": "error",
+    "padding-line-between-statements": [
+        "error",
+        { blankLine: "always", prev: "*", next: "return" },
+        {
+            blankLine: "always",
+            prev: "*",
+            next: ["if", "for", "while", "do", "switch", "try"],
+        },
+        {
+            blankLine: "always",
+            prev: ["if", "for", "while", "do", "switch", "try"],
+            next: "*",
+        },
+    ],
 }
 
 export default tseslint.config(

@@ -2,11 +2,83 @@ body {
     background: darkblue;
     color: white;
 }
-canvas {
+
+.game {
+    position: relative;
     width: 1000px;
     height: 500px;
     margin: 30px;
-    position: relative;
     background: white;
     border: 3px solid black;
+}
+
+.game canvas {
+    display: block;
+    width: 1000px;
+    height: 500px;
+    margin: 0;
+    border: none;
+    background: white;
+}
+
+.game-veil {
+    position: absolute;
+    inset: 0;
+    background: rgba(80, 80, 80, 0.55);
+    backdrop-filter: blur(4px);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.game-veil[hidden] {
+    display: none;
+}
+
+.game-btn {
+    position: absolute;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    z-index: 2;
+    background-color: transparent;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+}
+
+.game-btn[hidden] {
+    display: none;
+}
+
+.game-btn.start,
+.game-btn.restart {
+    width: 64px;
+    height: 64px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.game-btn.pause,
+.game-btn.resume {
+    width: 48px;
+    height: 48px;
+    top: 12px;
+    right: 12px;
+}
+
+.game-btn.start {
+    background-image: url("/assets/icons/start.svg");
+}
+
+.game-btn.pause {
+    background-image: url("/assets/icons/pause.svg");
+}
+
+.game-btn.resume {
+    background-image: url("/assets/icons/resume.svg");
+}
+
+.game-btn.restart {
+    background-image: url("/assets/icons/restart.svg");
 }

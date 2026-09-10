@@ -7,10 +7,12 @@ function isScore(value: unknown): value is number {
 export function getTopScores(): number[] {
     try {
         const stored = localStorage.getItem(SCORE_HUD.STORAGE_KEY)
+
         if (!stored)
             return []
 
         const parsed: unknown = JSON.parse(stored)
+
         if (!Array.isArray(parsed))
             return []
 

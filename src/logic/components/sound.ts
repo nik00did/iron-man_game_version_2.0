@@ -9,8 +9,14 @@ export class Sound {
 
     play(): void {
         const playing = this.audio.play()
+
         if (playing)
             playing.catch((e: unknown): void => console.log(e))
+    }
+
+    playFromStart(): void {
+        this.audio.currentTime = 0
+        this.play()
     }
 
     stop(): void {

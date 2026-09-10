@@ -36,6 +36,8 @@ export type ObstacleSpawn =
           getHeight: () => number
       })
 
+export type GameStatus = "idle" | "playing" | "paused" | "crashed"
+
 export const BASIC_ICON_PATH = "/assets/icons"
 export const BASIC_SOUND_PATH = "/assets/sounds"
 
@@ -83,6 +85,29 @@ export const KEYS = {
     UP: "ArrowUp",
     RIGHT: "ArrowRight",
     DOWN: "ArrowDown",
+}
+
+export const GAME_STATUS = {
+    IDLE: "idle",
+    PLAYING: "playing",
+    PAUSED: "paused",
+    CRASHED: "crashed",
+} as const satisfies Record<string, GameStatus>
+
+export const GAME_KEYS = {
+    START: "Enter",
+    PAUSE: "p",
+    PAUSE_ALT: "Escape",
+}
+
+export const GAME_CONTROLS = {
+    WRAPPER_CLASS: "game",
+    VEIL_CLASS: "game-veil",
+    BUTTON_CLASS: "game-btn",
+    START_CLASS: "start",
+    PAUSE_CLASS: "pause",
+    RESUME_CLASS: "resume",
+    RESTART_CLASS: "restart",
 }
 
 export const PLAYER_MOVES: PlayerMove[] = [
@@ -176,6 +201,7 @@ export const OBSTACLE_SPAWNS: ObstacleSpawn[] = [
         getHeight: (): number => {
             const minHeight = 20
             const maxHeight = 300
+
             return Math.floor(
                 Math.random() * (maxHeight - minHeight + 1) + minHeight,
             )

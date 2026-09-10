@@ -1,6 +1,9 @@
 import {
     CANVAS,
     ENTITY_TYPE,
+    GAME_CONTROLS,
+    GAME_KEYS,
+    GAME_STATUS,
     ICONS,
     KEYS,
     OBSTACLE_SPAWNS,
@@ -16,13 +19,18 @@ type CanvasMock = {
     width: number
     height: number
     getContext: jest.Mock
-    addEventListener: jest.Mock
+}
+
+type WrapperMock = {
+    className: string
+    appendChild: jest.Mock
 }
 
 const Sound = jest.fn()
 const SceneEntityMock = jest.fn()
 const Background = jest.fn()
 const ScoreHud = jest.fn()
+const GameControls = jest.fn()
 const getTopScores = jest.fn()
 const saveScore = jest.fn()
 
@@ -38,6 +46,9 @@ jest.unstable_mockModule("@src/logic/components/background.js", (): { Background
 jest.unstable_mockModule("@src/logic/components/scoreHud.js", (): { ScoreHud: jest.Mock } => ({
     ScoreHud,
 }))
+jest.unstable_mockModule("@src/logic/components/gameControls.js", (): { GameControls: jest.Mock } => ({
+    GameControls,
+}))
 jest.unstable_mockModule("@src/logic/records.js", (): {
     getTopScores: jest.Mock
     saveScore: jest.Mock
@@ -50,6 +61,7 @@ const { Scene } = await import("@src/logic/components/scene.js")
 
 function getListener(mockFn: jest.Mock, type: string): (event?: KeyEvent) => void {
     const matched = mockFn.mock.calls.find((call) => call[0] === type)
+
     return matched[1] as (event?: KeyEvent) => void
 }
 
@@ -64,6 +76,8 @@ function asEntity(value: unknown): SceneEntity {
 describe("Scene", () => {
     let context: { clearRect: jest.Mock }
     let canvas: CanvasMock
+    let wrapper: WrapperMock
+    let controls: { sync: jest.Mock }
 
     beforeEach(() => {
         context = { clearRect: jest.fn() }
@@ -71,11 +85,20 @@ describe("Scene", () => {
             width: 0,
             height: 0,
             getContext: jest.fn(() => context),
-            addEventListener: jest.fn(),
         }
+        wrapper = {
+            className: "",
+            appendChild: jest.fn(),
+        }
+        controls = { sync: jest.fn() }
 
-        Sound.mockImplementation((): { play: jest.Mock; stop: jest.Mock } => ({
+        Sound.mockImplementation((): {
+            play: jest.Mock
+            playFromStart: jest.Mock
+            stop: jest.Mock
+        } => ({
             play: jest.fn(),
+            playFromStart: jest.fn(),
             stop: jest.fn(),
         }))
         SceneEntityMock.mockImplementation((props: Partial<SceneEntityProps> = {}) => ({
@@ -91,14 +114,23 @@ describe("Scene", () => {
             crashWith: jest.fn(() => false),
             newPos: jest.fn(),
             update: jest.fn(),
+            whenReady: jest.fn((): Promise<void> => Promise.resolve()),
         }))
-        Background.mockImplementation((): { wrap: jest.Mock; update: jest.Mock } => ({
+        Background.mockImplementation((): {
+            wrap: jest.Mock
+            update: jest.Mock
+            x: number
+            whenReady: jest.Mock
+        } => ({
             wrap: jest.fn(),
             update: jest.fn(),
+            x: 0,
+            whenReady: jest.fn((): Promise<void> => Promise.resolve()),
         }))
         ScoreHud.mockImplementation((): { draw: jest.Mock } => ({
             draw: jest.fn(),
         }))
+        GameControls.mockImplementation(() => controls)
         getTopScores.mockReset()
         saveScore.mockReset()
         getTopScores.mockReturnValue([12.5, 8, 3])
@@ -108,11 +140,15 @@ describe("Scene", () => {
         SceneEntityMock.mockClear()
         Background.mockClear()
         ScoreHud.mockClear()
+        GameControls.mockClear()
+        controls.sync.mockClear()
 
         Object.defineProperty(globalThis, "document", {
             configurable: true,
             value: {
-                createElement: jest.fn(() => canvas),
+                createElement: jest.fn((tag: string) =>
+                    tag === "canvas" ? canvas : wrapper,
+                ),
                 body: {
                     insertBefore: jest.fn(),
                     childNodes: [null],
@@ -143,15 +179,19 @@ describe("Scene", () => {
     })
 
     describe("constructor", () => {
-        it("creates the canvas, context, sounds, character, and background", () => {
+        it("creates the canvas, wrapper, sounds, character, and background", () => {
             const scene = new Scene()
 
             expect(document.createElement).toHaveBeenCalledWith("canvas")
+            expect(document.createElement).toHaveBeenCalledWith("div")
             expect(scene.canvas.width).toBe(CANVAS.width)
             expect(scene.canvas.height).toBe(CANVAS.height)
+            expect(wrapper.className).toBe(GAME_CONTROLS.WRAPPER_CLASS)
+            expect(wrapper.appendChild).toHaveBeenCalledWith(canvas)
             expect(canvas.getContext).toHaveBeenCalledWith("2d")
             expect(Sound).toHaveBeenCalledWith(SOUNDS.FIRST_FIGHT)
             expect(Sound).toHaveBeenCalledWith(SOUNDS.LOVE_ME_AGAIN)
+            expect(GameControls).toHaveBeenCalledTimes(1)
             expect(SceneEntityMock).toHaveBeenCalledWith({
                 width: 50,
                 height: 50,
@@ -173,23 +213,29 @@ describe("Scene", () => {
             expect(scene.topScores).toEqual([12.5, 8, 3])
             expect(scene.scoreSeconds).toBe(0)
             expect(scene.obstacles).toEqual([])
-            expect(scene.running).toBe(false)
+            expect(scene.status).toBe(GAME_STATUS.IDLE)
             expect(scene.musicStarted).toBe(false)
         })
     })
 
-    describe("start", () => {
-        it("mounts the canvas, starts the loop, and binds input listeners", () => {
+    describe("mount", () => {
+        it("inserts the wrapper, paints an idle frame, and binds input", async () => {
             const scene = new Scene()
 
-            scene.start()
+            await scene.mount()
 
             expect(document.body.insertBefore).toHaveBeenCalledWith(
-                scene.canvas,
+                scene.wrapper,
                 document.body.childNodes[0],
             )
-            expect(scene.running).toBe(true)
-            expect(requestAnimationFrame).toHaveBeenCalledTimes(1)
+            expect(scene.status).toBe(GAME_STATUS.IDLE)
+            expect(requestAnimationFrame).not.toHaveBeenCalled()
+            expect(asMock(scene.background.whenReady)).toHaveBeenCalledTimes(1)
+            expect(asMock(scene.character.whenReady)).toHaveBeenCalledTimes(1)
+            expect(asMock(scene.background.update)).toHaveBeenCalledWith(scene.context)
+            expect(asMock(scene.character.update)).toHaveBeenCalledWith(scene.context)
+            expect(asMock(scene.scoreHud.draw)).toHaveBeenCalled()
+            expect(controls.sync).toHaveBeenCalledWith(GAME_STATUS.IDLE)
             expect(window.addEventListener).toHaveBeenCalledWith(
                 "keydown",
                 expect.any(Function),
@@ -198,15 +244,82 @@ describe("Scene", () => {
                 "keyup",
                 expect.any(Function),
             )
-            expect(canvas.addEventListener).toHaveBeenCalledWith(
-                "pointerdown",
-                expect.any(Function),
-            )
         })
 
-        it("prevents default on arrow keys, stores the key, and starts music", () => {
+        it("does not paint idle if the game started before images loaded", async () => {
             const scene = new Scene()
-            scene.start()
+            let release!: () => void
+            const gate = new Promise<void>((resolve): void => {
+                release = resolve
+            })
+            asMock(scene.background.whenReady).mockReturnValue(gate)
+            asMock(scene.character.whenReady).mockReturnValue(Promise.resolve())
+            const mounting = scene.mount()
+
+            scene.play()
+            release()
+            await mounting
+
+            expect(asMock(scene.background.update)).not.toHaveBeenCalled()
+        })
+
+        it("does not store arrow keys or start music while idle", async () => {
+            const scene = new Scene()
+            await scene.mount()
+            const preventDefault = jest.fn()
+            const keydown = getListener(asMock(window.addEventListener), "keydown")
+
+            keydown({ key: KEYS.LEFT, preventDefault })
+
+            expect(preventDefault).toHaveBeenCalledTimes(1)
+            expect(scene.key?.[KEYS.LEFT]).toBeUndefined()
+            expect(asMock(scene.music.play)).not.toHaveBeenCalled()
+        })
+
+        it("starts the game on Enter while idle", async () => {
+            const scene = new Scene()
+            await scene.mount()
+            const preventDefault = jest.fn()
+            const keydown = getListener(asMock(window.addEventListener), "keydown")
+
+            keydown({ key: GAME_KEYS.START, preventDefault })
+
+            expect(preventDefault).toHaveBeenCalledTimes(1)
+            expect(scene.status).toBe(GAME_STATUS.PLAYING)
+            expect(asMock(scene.music.play)).toHaveBeenCalledTimes(1)
+        })
+
+        it("clears the key on keyup", async () => {
+            const scene = new Scene()
+            await scene.mount()
+
+            if (scene.key)
+                scene.key[KEYS.RIGHT] = true
+
+            const keyup = getListener(asMock(window.addEventListener), "keyup")
+
+            keyup({ key: KEYS.RIGHT })
+
+            expect(scene.key?.[KEYS.RIGHT]).toBe(false)
+        })
+    })
+
+    describe("play", () => {
+        it("starts the loop, music, and playing UI", () => {
+            const scene = new Scene()
+
+            scene.play()
+
+            expect(scene.status).toBe(GAME_STATUS.PLAYING)
+            expect(requestAnimationFrame).toHaveBeenCalledTimes(1)
+            expect(asMock(scene.music.play)).toHaveBeenCalledTimes(1)
+            expect(controls.sync).toHaveBeenCalledWith(GAME_STATUS.PLAYING)
+        })
+
+        it("stores arrow keys while playing", async () => {
+            const scene = new Scene()
+            await scene.mount()
+            scene.play()
             const preventDefault = jest.fn()
             const keydown = getListener(asMock(window.addEventListener), "keydown")
 
@@ -214,41 +327,124 @@ describe("Scene", () => {
 
             expect(preventDefault).toHaveBeenCalledTimes(1)
             expect(scene.key?.[KEYS.LEFT]).toBe(true)
-            expect(asMock(scene.music.play)).toHaveBeenCalledTimes(1)
+        })
+    })
+
+    describe("pause and resume", () => {
+        it("freezes the loop without stopping music", () => {
+            const scene = new Scene()
+            scene.play()
+
+            if (scene.key)
+                scene.key[KEYS.RIGHT] = true
+
+            scene.rafId = 77
+
+            scene.pause()
+
+            expect(scene.status).toBe(GAME_STATUS.PAUSED)
+            expect(scene.key).toEqual({})
+            expect(cancelAnimationFrame).toHaveBeenCalledWith(77)
+            expect(asMock(scene.music.stop)).not.toHaveBeenCalled()
+            expect(controls.sync).toHaveBeenCalledWith(GAME_STATUS.PAUSED)
         })
 
-        it("does not prevent default for non-arrow keys", () => {
+        it("does nothing when pause is called while idle", () => {
             const scene = new Scene()
-            scene.start()
+
+            scene.pause()
+
+            expect(scene.status).toBe(GAME_STATUS.IDLE)
+            expect(cancelAnimationFrame).not.toHaveBeenCalled()
+        })
+
+        it("resumes the loop without starting music again", () => {
+            const scene = new Scene()
+            scene.play()
+            scene.pause()
+            asMock(requestAnimationFrame).mockClear()
+
+            scene.resume()
+
+            expect(scene.status).toBe(GAME_STATUS.PLAYING)
+            expect(requestAnimationFrame).toHaveBeenCalledTimes(1)
+            expect(asMock(scene.music.play)).toHaveBeenCalledTimes(1)
+            expect(controls.sync).toHaveBeenCalledWith(GAME_STATUS.PLAYING)
+        })
+
+        it("toggles pause with p and Escape", async () => {
+            const scene = new Scene()
+            await scene.mount()
+            scene.play()
             const preventDefault = jest.fn()
             const keydown = getListener(asMock(window.addEventListener), "keydown")
 
-            keydown({ key: "a", preventDefault })
+            keydown({ key: GAME_KEYS.PAUSE, preventDefault })
 
-            expect(preventDefault).not.toHaveBeenCalled()
-            expect(scene.key?.a).toBe(true)
+            expect(scene.status).toBe(GAME_STATUS.PAUSED)
+
+            keydown({ key: GAME_KEYS.PAUSE_ALT, preventDefault })
+
+            expect(scene.status).toBe(GAME_STATUS.PLAYING)
         })
+    })
 
-        it("clears the key on keyup", () => {
+    describe("restart", () => {
+        it("resets the world and starts playing after a crash", () => {
             const scene = new Scene()
-            scene.start()
+            scene.status = GAME_STATUS.CRASHED
+            scene.frameNo = 40
+            scene.scoreSeconds = 8
+            scene.obstacles = [asEntity({})]
+            scene.character.x = 90
+            scene.character.y = 12
+            scene.character.speedX = 4
+            scene.background.x = -20
+
             if (scene.key)
-                scene.key[KEYS.RIGHT] = true
-            const keyup = getListener(asMock(window.addEventListener), "keyup")
+                scene.key[KEYS.LEFT] = true
 
-            keyup({ key: KEYS.RIGHT })
+            scene.restart()
 
-            expect(scene.key?.[KEYS.RIGHT]).toBe(false)
+            expect(asMock(scene.collisionSound.stop)).toHaveBeenCalledTimes(1)
+            expect(asMock(scene.music.playFromStart)).toHaveBeenCalledTimes(1)
+            expect(scene.status).toBe(GAME_STATUS.PLAYING)
+            expect(scene.frameNo).toBe(0)
+            expect(scene.scoreSeconds).toBe(0)
+            expect(scene.obstacles).toEqual([])
+            expect(scene.character.x).toBe(0)
+            expect(scene.character.y).toBe(CANVAS.height / 2)
+            expect(scene.character.speedX).toBe(0)
+            expect(scene.character.image.src).toBe(ICONS.IRON_MAN)
+            expect(scene.background.x).toBe(0)
+            expect(scene.key).toEqual({})
+            expect(requestAnimationFrame).toHaveBeenCalledTimes(1)
+            expect(controls.sync).toHaveBeenCalledWith(GAME_STATUS.PLAYING)
         })
 
-        it("starts music on canvas pointerdown", () => {
+        it("does not restart unless the scene has crashed", () => {
             const scene = new Scene()
-            scene.start()
-            const pointerdown = getListener(canvas.addEventListener, "pointerdown")
+            scene.play()
+            asMock(requestAnimationFrame).mockClear()
 
-            pointerdown()
+            scene.restart()
 
-            expect(asMock(scene.music.play)).toHaveBeenCalledTimes(1)
+            expect(scene.status).toBe(GAME_STATUS.PLAYING)
+            expect(asMock(scene.music.playFromStart)).not.toHaveBeenCalled()
+            expect(requestAnimationFrame).not.toHaveBeenCalled()
+        })
+
+        it("restarts on Enter after a crash", async () => {
+            const scene = new Scene()
+            await scene.mount()
+            scene.status = GAME_STATUS.CRASHED
+            const preventDefault = jest.fn()
+            const keydown = getListener(asMock(window.addEventListener), "keydown")
+
+            keydown({ key: GAME_KEYS.START, preventDefault })
+
+            expect(preventDefault).toHaveBeenCalledTimes(1)
+            expect(scene.status).toBe(GAME_STATUS.PLAYING)
         })
     })
 
@@ -265,31 +461,35 @@ describe("Scene", () => {
     })
 
     describe("stop", () => {
-        it("stops the loop and cancels the animation frame", () => {
+        it("cancels the animation frame", () => {
             const scene = new Scene()
-            scene.running = true
             scene.rafId = 77
 
             scene.stop()
 
-            expect(scene.running).toBe(false)
             expect(cancelAnimationFrame).toHaveBeenCalledWith(77)
+            expect(scene.rafId).toBeNull()
         })
     })
 
     describe("stopOnCollision", () => {
-        it("stops music, plays the collision sound, and stops the scene", () => {
+        it("saves the score, plays collision audio, and shows restart", () => {
             const scene = new Scene()
-            scene.running = true
+            scene.status = GAME_STATUS.PLAYING
             scene.rafId = 77
+
+            if (scene.key)
+                scene.key[KEYS.RIGHT] = true
 
             scene.stopOnCollision()
 
             expect(asMock(scene.music.stop)).toHaveBeenCalledTimes(1)
-            expect(asMock(scene.collisionSound.play)).toHaveBeenCalledTimes(1)
+            expect(asMock(scene.collisionSound.playFromStart)).toHaveBeenCalledTimes(1)
             expect(saveScore).toHaveBeenCalledWith(scene.scoreSeconds)
-            expect(scene.running).toBe(false)
+            expect(scene.status).toBe(GAME_STATUS.CRASHED)
+            expect(scene.key).toEqual({})
             expect(cancelAnimationFrame).toHaveBeenCalledWith(77)
+            expect(controls.sync).toHaveBeenCalledWith(GAME_STATUS.CRASHED)
         })
     })
 
@@ -419,7 +619,7 @@ describe("Scene", () => {
     })
 
     describe("updateObstacles", () => {
-        it("moves obstacles, drops those off screen, and updates the rest", () => {
+        it("moves obstacles and drops those off screen", () => {
             const scene = new Scene()
             const kept = { x: 10, speedX: -3, width: 5, update: jest.fn() }
             const dropped = { x: -10, speedX: -3, width: 5, update: jest.fn() }
@@ -429,7 +629,7 @@ describe("Scene", () => {
 
             expect(kept.x).toBe(7)
             expect(scene.obstacles).toEqual([kept])
-            expect(kept.update).toHaveBeenCalledWith(scene.context)
+            expect(kept.update).not.toHaveBeenCalled()
             expect(dropped.update).not.toHaveBeenCalled()
         })
     })
@@ -437,6 +637,7 @@ describe("Scene", () => {
     describe("moveCharacter", () => {
         it("returns when key state is missing", () => {
             const scene = new Scene()
+            scene.status = GAME_STATUS.PLAYING
             scene.key = null
 
             scene.moveCharacter()
@@ -444,8 +645,21 @@ describe("Scene", () => {
             expect(scene.character.speedX).toBe(0)
         })
 
-        it("applies the matching player move", () => {
+        it("does not apply moves when the scene is not playing", () => {
             const scene = new Scene()
+
+            if (scene.key)
+                scene.key[KEYS.RIGHT] = true
+
+            scene.moveCharacter()
+
+            expect(scene.character.speedX).toBe(0)
+        })
+
+        it("applies the matching player move while playing", () => {
+            const scene = new Scene()
+            scene.status = GAME_STATUS.PLAYING
+
             if (scene.key)
                 scene.key[KEYS.RIGHT] = true
 
@@ -458,7 +672,7 @@ describe("Scene", () => {
     })
 
     describe("tick", () => {
-        it("returns without scheduling a frame when the scene is not running", () => {
+        it("returns without scheduling a frame when the scene is not playing", () => {
             const scene = new Scene()
 
             scene.tick(100)
@@ -466,9 +680,9 @@ describe("Scene", () => {
             expect(requestAnimationFrame).not.toHaveBeenCalled()
         })
 
-        it("sets lastTime on the first running tick and does not update", () => {
+        it("sets lastTime on the first playing tick and does not update", () => {
             const scene = new Scene()
-            scene.running = true
+            scene.status = GAME_STATUS.PLAYING
             const update = jest.spyOn(scene, "update")
 
             scene.tick(1000)
@@ -480,7 +694,7 @@ describe("Scene", () => {
 
         it("calls update once per tick interval", () => {
             const scene = new Scene()
-            scene.running = true
+            scene.status = GAME_STATUS.PLAYING
             scene.lastTime = 1000
             const update = jest.spyOn(scene, "update").mockImplementation((): void => {})
 
@@ -488,10 +702,24 @@ describe("Scene", () => {
 
             expect(update).toHaveBeenCalledTimes(1)
         })
+
+        it("does not catch up ticks after a long pause", () => {
+            const scene = new Scene()
+            scene.play()
+            scene.lastTime = 1000
+            scene.pause()
+            const update = jest.spyOn(scene, "update").mockImplementation((): void => {})
+
+            scene.resume()
+            scene.tick(5000)
+
+            expect(update).not.toHaveBeenCalled()
+            expect(scene.lastTime).toBe(5000)
+        })
     })
 
     describe("update", () => {
-        it("runs collision, draw, spawn, and character steps in order", () => {
+        it("runs collision, spawn, character, and draw steps in order", () => {
             const scene = new Scene()
             const order: string[] = []
             jest.spyOn(scene, "handleObstacleCollision").mockImplementation((): void => {
@@ -523,7 +751,7 @@ describe("Scene", () => {
             })
             scene.character.speedX = 4
             scene.character.speedY = -2
-            scene.running = true
+            scene.status = GAME_STATUS.PLAYING
             asMock(scene.scoreHud.draw).mockImplementation((): void => {
                 order.push("hud")
             })
@@ -532,13 +760,13 @@ describe("Scene", () => {
 
             expect(order).toEqual([
                 "collision",
-                "clear",
                 "wrap",
-                "bg",
                 "generate",
                 "obstacles",
                 "newPos",
                 "move",
+                "clear",
+                "bg",
                 "char",
                 "hud",
             ])
