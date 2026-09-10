@@ -219,10 +219,10 @@ describe("Scene", () => {
     })
 
     describe("mount", () => {
-        it("inserts the wrapper, paints an idle frame, and binds input", async () => {
+        it("inserts the wrapper, syncs idle UI, and binds input", () => {
             const scene = new Scene()
 
-            await scene.mount()
+            scene.mount()
 
             expect(document.body.insertBefore).toHaveBeenCalledWith(
                 scene.wrapper,
@@ -232,9 +232,6 @@ describe("Scene", () => {
             expect(requestAnimationFrame).not.toHaveBeenCalled()
             expect(asMock(scene.background.whenReady)).toHaveBeenCalledTimes(1)
             expect(asMock(scene.character.whenReady)).toHaveBeenCalledTimes(1)
-            expect(asMock(scene.background.update)).toHaveBeenCalledWith(scene.context)
-            expect(asMock(scene.character.update)).toHaveBeenCalledWith(scene.context)
-            expect(asMock(scene.scoreHud.draw)).toHaveBeenCalled()
             expect(controls.sync).toHaveBeenCalledWith(GAME_STATUS.IDLE)
             expect(window.addEventListener).toHaveBeenCalledWith(
                 "keydown",
@@ -246,26 +243,9 @@ describe("Scene", () => {
             )
         })
 
-        it("does not paint idle if the game started before images loaded", async () => {
+        it("does not store arrow keys or start music while idle", () => {
             const scene = new Scene()
-            let release!: () => void
-            const gate = new Promise<void>((resolve): void => {
-                release = resolve
-            })
-            asMock(scene.background.whenReady).mockReturnValue(gate)
-            asMock(scene.character.whenReady).mockReturnValue(Promise.resolve())
-            const mounting = scene.mount()
-
-            scene.play()
-            release()
-            await mounting
-
-            expect(asMock(scene.background.update)).not.toHaveBeenCalled()
-        })
-
-        it("does not store arrow keys or start music while idle", async () => {
-            const scene = new Scene()
-            await scene.mount()
+            scene.mount()
             const preventDefault = jest.fn()
             const keydown = getListener(asMock(window.addEventListener), "keydown")
 
@@ -276,9 +256,9 @@ describe("Scene", () => {
             expect(asMock(scene.music.play)).not.toHaveBeenCalled()
         })
 
-        it("starts the game on Enter while idle", async () => {
+        it("starts the game on Enter while idle", () => {
             const scene = new Scene()
-            await scene.mount()
+            scene.mount()
             const preventDefault = jest.fn()
             const keydown = getListener(asMock(window.addEventListener), "keydown")
 
@@ -289,9 +269,9 @@ describe("Scene", () => {
             expect(asMock(scene.music.play)).toHaveBeenCalledTimes(1)
         })
 
-        it("clears the key on keyup", async () => {
+        it("clears the key on keyup", () => {
             const scene = new Scene()
-            await scene.mount()
+            scene.mount()
 
             if (scene.key)
                 scene.key[KEYS.RIGHT] = true
@@ -301,6 +281,34 @@ describe("Scene", () => {
             keyup({ key: KEYS.RIGHT })
 
             expect(scene.key?.[KEYS.RIGHT]).toBe(false)
+        })
+    })
+
+    describe("paintIdle", () => {
+        it("draws after images are ready", async () => {
+            const scene = new Scene()
+
+            await scene.paintIdle()
+
+            expect(asMock(scene.background.update)).toHaveBeenCalledWith(scene.context)
+            expect(asMock(scene.character.update)).toHaveBeenCalledWith(scene.context)
+            expect(asMock(scene.scoreHud.draw)).toHaveBeenCalled()
+        })
+
+        it("does not paint if the game started before images loaded", async () => {
+            const scene = new Scene()
+            let release!: () => void
+            const gate = new Promise<void>((resolve): void => {
+                release = resolve
+            })
+            asMock(scene.background.whenReady).mockReturnValue(gate)
+            asMock(scene.character.whenReady).mockReturnValue(Promise.resolve())
+            scene.play()
+            release()
+
+            await scene.paintIdle()
+
+            expect(asMock(scene.background.update)).not.toHaveBeenCalled()
         })
     })
 
@@ -316,9 +324,9 @@ describe("Scene", () => {
             expect(controls.sync).toHaveBeenCalledWith(GAME_STATUS.PLAYING)
         })
 
-        it("stores arrow keys while playing", async () => {
+        it("stores arrow keys while playing", () => {
             const scene = new Scene()
-            await scene.mount()
+            scene.mount()
             scene.play()
             const preventDefault = jest.fn()
             const keydown = getListener(asMock(window.addEventListener), "keydown")
@@ -372,9 +380,9 @@ describe("Scene", () => {
             expect(controls.sync).toHaveBeenCalledWith(GAME_STATUS.PLAYING)
         })
 
-        it("toggles pause with p and Escape", async () => {
+        it("toggles pause with p and Escape", () => {
             const scene = new Scene()
-            await scene.mount()
+            scene.mount()
             scene.play()
             const preventDefault = jest.fn()
             const keydown = getListener(asMock(window.addEventListener), "keydown")
@@ -434,9 +442,9 @@ describe("Scene", () => {
             expect(requestAnimationFrame).not.toHaveBeenCalled()
         })
 
-        it("restarts on Enter after a crash", async () => {
+        it("restarts on Enter after a crash", () => {
             const scene = new Scene()
-            await scene.mount()
+            scene.mount()
             scene.status = GAME_STATUS.CRASHED
             const preventDefault = jest.fn()
             const keydown = getListener(asMock(window.addEventListener), "keydown")
