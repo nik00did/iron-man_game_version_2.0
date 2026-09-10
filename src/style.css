@@ -40,6 +40,10 @@ body {
     padding: 0;
     cursor: pointer;
     z-index: 2;
+    background-color: transparent;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
 }
 
 .game-btn[hidden] {
@@ -64,17 +68,17 @@ body {
 }
 
 .game-btn.start {
-    background: red;
+    background-image: url("/assets/icons/start.svg");
 }
 
 .game-btn.pause {
-    background: blue;
+    background-image: url("/assets/icons/pause.svg");
 }
 
 .game-btn.resume {
-    background: green;
+    background-image: url("/assets/icons/resume.svg");
 }
 
 .game-btn.restart {
-    background: orange;
+    background-image: url("/assets/icons/restart.svg");
 }

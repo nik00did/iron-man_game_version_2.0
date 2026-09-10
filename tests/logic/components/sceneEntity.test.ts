@@ -65,6 +65,45 @@ describe("SceneEntity", () => {
         })
     })
 
+    describe("whenReady", () => {
+        it("resolves immediately when the image is already complete", async () => {
+            const decode = jest.fn()
+            Object.defineProperty(globalThis, "Image", {
+                configurable: true,
+                value: jest.fn(() => ({ src: "", complete: true, decode })),
+            })
+            const entity = createEntity()
+
+            await entity.whenReady()
+
+            expect(decode).not.toHaveBeenCalled()
+        })
+
+        it("waits for decode when the image is not complete", async () => {
+            const decode = jest.fn((): Promise<void> => Promise.resolve())
+            Object.defineProperty(globalThis, "Image", {
+                configurable: true,
+                value: jest.fn(() => ({ src: "", complete: false, decode })),
+            })
+            const entity = createEntity()
+
+            await entity.whenReady()
+
+            expect(decode).toHaveBeenCalledTimes(1)
+        })
+
+        it("resolves when decode fails", async () => {
+            const decode = jest.fn((): Promise<void> => Promise.reject(new Error("bad image")))
+            Object.defineProperty(globalThis, "Image", {
+                configurable: true,
+                value: jest.fn(() => ({ src: "", complete: false, decode })),
+            })
+            const entity = createEntity()
+
+            await expect(entity.whenReady()).resolves.toBeUndefined()
+        })
+    })
+
     describe("update", () => {
         it("draws the image at the entity position and size", () => {
             const entity = createEntity({ x: 8, y: 12, width: 20, height: 30 })

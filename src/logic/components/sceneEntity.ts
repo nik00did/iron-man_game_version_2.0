@@ -44,6 +44,29 @@ export class SceneEntity {
         ctx.drawImage(this.image, this.x, this.y, this.width, this.height)
     }
 
+    whenReady(): Promise<void> {
+        if (this.image.complete)
+            return Promise.resolve()
+
+        if (typeof this.image.decode === "function") {
+            return this.image.decode().then(
+                (): void => undefined,
+                (): void => undefined,
+            )
+        }
+
+        return new Promise((resolve): void => {
+            if (typeof this.image.addEventListener !== "function") {
+                resolve()
+
+                return
+            }
+
+            this.image.addEventListener("load", (): void => resolve(), { once: true })
+            this.image.addEventListener("error", (): void => resolve(), { once: true })
+        })
+    }
+
     newPos(): void {
         this.x += this.speedX
         this.y += this.speedY

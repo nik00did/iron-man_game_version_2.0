@@ -100,8 +100,19 @@ export class Scene {
     mount(): void {
         document.body.insertBefore(this.wrapper, document.body.childNodes[0])
         this.bindInput()
-        this.draw()
         this.controls.sync(this.status)
+
+        this.paintIdle()
+    }
+
+    async paintIdle(): Promise<void> {
+        await Promise.all([
+            this.background.whenReady(),
+            this.character.whenReady(),
+        ])
+
+        if (this.status === GAME_STATUS.IDLE)
+            this.draw()
     }
 
     bindInput(): void {
