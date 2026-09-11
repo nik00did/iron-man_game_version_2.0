@@ -6,7 +6,7 @@ import {
     GAME_STATUS,
     ICONS,
     KEYS,
-    OBSTACLE_SPAWNS,
+    OBSTACLES,
     SOUNDS,
     TICK_MS,
 } from "@src/constants.js"
@@ -116,16 +116,8 @@ describe("Scene", () => {
             update: jest.fn(),
             whenReady: jest.fn((): Promise<void> => Promise.resolve()),
         }))
-        Background.mockImplementation((): {
-            wrap: jest.Mock
-            update: jest.Mock
-            x: number
-            whenReady: jest.Mock
-        } => ({
-            wrap: jest.fn(),
+        Background.mockImplementation((): { update: jest.Mock } => ({
             update: jest.fn(),
-            x: 0,
-            whenReady: jest.fn((): Promise<void> => Promise.resolve()),
         }))
         ScoreHud.mockImplementation((): { draw: jest.Mock } => ({
             draw: jest.fn(),
@@ -172,6 +164,7 @@ describe("Scene", () => {
     })
 
     afterEach(() => {
+        OBSTACLES.ENABLED = false
         Reflect.deleteProperty(globalThis, "document")
         Reflect.deleteProperty(globalThis, "window")
         Reflect.deleteProperty(globalThis, "requestAnimationFrame")
@@ -200,14 +193,7 @@ describe("Scene", () => {
                 y: CANVAS.height / 2,
                 type: ENTITY_TYPE.CHARACTER,
             })
-            expect(Background).toHaveBeenCalledWith({
-                width: CANVAS.width,
-                height: CANVAS.height,
-                color: ICONS.BACKGROUND,
-                x: 0,
-                y: 0,
-                type: ENTITY_TYPE.BACKGROUND,
-            })
+            expect(Background).toHaveBeenCalledTimes(1)
             expect(ScoreHud).toHaveBeenCalledTimes(1)
             expect(getTopScores).toHaveBeenCalledTimes(1)
             expect(scene.topScores).toEqual([12.5, 8, 3])
@@ -230,7 +216,6 @@ describe("Scene", () => {
             )
             expect(scene.status).toBe(GAME_STATUS.IDLE)
             expect(requestAnimationFrame).not.toHaveBeenCalled()
-            expect(asMock(scene.background.whenReady)).toHaveBeenCalledTimes(1)
             expect(asMock(scene.character.whenReady)).toHaveBeenCalledTimes(1)
             expect(controls.sync).toHaveBeenCalledWith(GAME_STATUS.IDLE)
             expect(window.addEventListener).toHaveBeenCalledWith(
@@ -285,12 +270,15 @@ describe("Scene", () => {
     })
 
     describe("paintIdle", () => {
-        it("draws after images are ready", async () => {
+        it("draws after the character image is ready", async () => {
             const scene = new Scene()
 
             await scene.paintIdle()
 
-            expect(asMock(scene.background.update)).toHaveBeenCalledWith(scene.context)
+            expect(asMock(scene.background.update)).toHaveBeenCalledWith(
+                scene.context,
+                0,
+            )
             expect(asMock(scene.character.update)).toHaveBeenCalledWith(scene.context)
             expect(asMock(scene.scoreHud.draw)).toHaveBeenCalled()
         })
@@ -301,8 +289,7 @@ describe("Scene", () => {
             const gate = new Promise<void>((resolve): void => {
                 release = resolve
             })
-            asMock(scene.background.whenReady).mockReturnValue(gate)
-            asMock(scene.character.whenReady).mockReturnValue(Promise.resolve())
+            asMock(scene.character.whenReady).mockReturnValue(gate)
             scene.play()
             release()
 
@@ -407,7 +394,6 @@ describe("Scene", () => {
             scene.character.x = 90
             scene.character.y = 12
             scene.character.speedX = 4
-            scene.background.x = -20
 
             if (scene.key)
                 scene.key[KEYS.LEFT] = true
@@ -424,7 +410,6 @@ describe("Scene", () => {
             expect(scene.character.y).toBe(CANVAS.height / 2)
             expect(scene.character.speedX).toBe(0)
             expect(scene.character.image.src).toBe(ICONS.IRON_MAN)
-            expect(scene.background.x).toBe(0)
             expect(scene.key).toEqual({})
             expect(requestAnimationFrame).toHaveBeenCalledTimes(1)
             expect(controls.sync).toHaveBeenCalledWith(GAME_STATUS.PLAYING)
@@ -593,7 +578,7 @@ describe("Scene", () => {
 
             scene.generateNewObstacles()
 
-            expect(scene.obstacles).toHaveLength(OBSTACLE_SPAWNS.length)
+            expect(scene.obstacles).toHaveLength(OBSTACLES.SPAWNS.length)
             expect(SceneEntityMock).toHaveBeenCalledWith({
                 width: 100,
                 height: 60,
@@ -626,14 +611,14 @@ describe("Scene", () => {
         })
     })
 
-    describe("updateObstacles", () => {
+    describe("updateObstaclesPosition", () => {
         it("moves obstacles and drops those off screen", () => {
             const scene = new Scene()
             const kept = { x: 10, speedX: -3, width: 5, update: jest.fn() }
             const dropped = { x: -10, speedX: -3, width: 5, update: jest.fn() }
             scene.obstacles = [asEntity(kept), asEntity(dropped)]
 
-            scene.updateObstacles()
+            scene.updateObstaclesPosition()
 
             expect(kept.x).toBe(7)
             expect(scene.obstacles).toEqual([kept])
@@ -728,6 +713,7 @@ describe("Scene", () => {
 
     describe("update", () => {
         it("runs collision, spawn, character, and draw steps in order", () => {
+            jest.replaceProperty(OBSTACLES, "ENABLED", true)
             const scene = new Scene()
             const order: string[] = []
             jest.spyOn(scene, "handleObstacleCollision").mockImplementation((): void => {
@@ -739,14 +725,11 @@ describe("Scene", () => {
             jest.spyOn(scene, "generateNewObstacles").mockImplementation((): void => {
                 order.push("generate")
             })
-            jest.spyOn(scene, "updateObstacles").mockImplementation((): void => {
+            jest.spyOn(scene, "updateObstaclesPosition").mockImplementation((): void => {
                 order.push("obstacles")
             })
             jest.spyOn(scene, "moveCharacter").mockImplementation((): void => {
                 order.push("move")
-            })
-            asMock(scene.background.wrap).mockImplementation((): void => {
-                order.push("wrap")
             })
             asMock(scene.background.update).mockImplementation((): void => {
                 order.push("bg")
@@ -768,7 +751,6 @@ describe("Scene", () => {
 
             expect(order).toEqual([
                 "collision",
-                "wrap",
                 "generate",
                 "obstacles",
                 "newPos",
@@ -782,13 +764,27 @@ describe("Scene", () => {
             expect(scene.scoreSeconds).toBe(TICK_MS / 1000)
             expect(scene.character.speedX).toBe(0)
             expect(scene.character.speedY).toBe(0)
-            expect(asMock(scene.background.update)).toHaveBeenCalledWith(scene.context)
+            expect(asMock(scene.background.update)).toHaveBeenCalledWith(
+                scene.context,
+                TICK_MS,
+            )
             expect(asMock(scene.character.update)).toHaveBeenCalledWith(scene.context)
             expect(asMock(scene.scoreHud.draw)).toHaveBeenCalledWith(
                 scene.context,
                 scene.scoreSeconds,
                 scene.topScores,
             )
+        })
+
+        it("does not generate obstacles when they are disabled", () => {
+            const scene = new Scene()
+            const generateNewObstacles = jest
+                .spyOn(scene, "generateNewObstacles")
+                .mockImplementation((): void => {})
+
+            scene.update()
+
+            expect(generateNewObstacles).not.toHaveBeenCalled()
         })
     })
 })

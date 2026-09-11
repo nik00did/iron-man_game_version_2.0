@@ -38,6 +38,11 @@ export type ObstacleSpawn =
 
 export type GameStatus = "idle" | "playing" | "paused" | "crashed"
 
+export type SkyStop = {
+    zenith: string
+    horizon: string
+}
+
 export const BASIC_ICON_PATH = "/assets/icons"
 export const BASIC_SOUND_PATH = "/assets/sounds"
 
@@ -47,6 +52,20 @@ export const CANVAS = {
 }
 
 export const TICK_MS = 20
+
+export const SKY = {
+    PERIOD_MS: 10_000,
+    STOPS: [
+        { zenith: "#1e6bb8", horizon: "#7ec8e8" },
+        { zenith: "#3d2b5a", horizon: "#e07a5f" },
+        { zenith: "#0b1026", horizon: "#3d2b5a" },
+        { zenith: "#050816", horizon: "#1a2744" },
+        { zenith: "#0b1026", horizon: "#2a3358" },
+        { zenith: "#1a2744", horizon: "#c97b63" },
+        { zenith: "#4a6fa5", horizon: "#ff9f68" },
+        { zenith: "#4aa3de", horizon: "#c5e8f7" },
+    ] as const satisfies readonly SkyStop[],
+}
 
 export const SCORE_HUD = {
     STORAGE_KEY: "iron-man.topScores",
@@ -66,7 +85,6 @@ export const ICONS = {
     CLOUD: `${BASIC_ICON_PATH}/cloud.png`,
     PLANE: `${BASIC_ICON_PATH}/plane.png`,
     IMAGE: `${BASIC_ICON_PATH}/iron-man.png`,
-    BACKGROUND: `${BASIC_ICON_PATH}/bluesky4.png`,
     BUILDING: `${BASIC_ICON_PATH}/building.png`,
     IRON_MAN: `${BASIC_ICON_PATH}/iron-man.png`,
     MOVE_LEFT: `${BASIC_ICON_PATH}/iron-man(move-left).png`,
@@ -151,61 +169,66 @@ export const ENTITY_TYPE = {
     CLOUD: "cloud",
     PLANE: "plane",
     CHARACTER: "character",
-    BACKGROUND: "background",
     BUILDING: "building",
 }
 
-export const OBSTACLE_SPAWNS: ObstacleSpawn[] = [
-    {
-        speedX: -3,
-        intervalFactor: 10,
-        width: 100,
-        height: 60,
-        color: ICONS.CLOUD,
-        type: ENTITY_TYPE.CLOUD,
-        getY: (canvas): number => canvas.height - 320,
-    },
-    {
-        speedX: -3,
-        intervalFactor: 8,
-        width: 100,
-        height: 60,
-        color: ICONS.CLOUD,
-        type: ENTITY_TYPE.CLOUD,
-        getY: (canvas): number => canvas.height - 450,
-    },
-    {
-        speedX: -3,
-        intervalFactor: 11,
-        width: 80,
-        height: 30,
-        color: ICONS.PLANE,
-        type: ENTITY_TYPE.PLANE,
-        getY: (canvas): number => canvas.height - 370,
-    },
-    {
-        speedX: -6,
-        intervalFactor: 15,
-        width: 100,
-        height: 30,
-        color: ICONS.PLANE,
-        type: ENTITY_TYPE.PLANE,
-        getY: (canvas): number => canvas.height - 490,
-    },
-    {
-        speedX: -2,
-        intervalFactor: 2,
-        width: 60,
-        color: ICONS.BUILDING,
-        type: ENTITY_TYPE.BUILDING,
-        getHeight: (): number => {
-            const minHeight = 20
-            const maxHeight = 300
-
-            return Math.floor(
-                Math.random() * (maxHeight - minHeight + 1) + minHeight,
-            )
+export const OBSTACLES: {
+    ENABLED: boolean
+    SPAWNS: ObstacleSpawn[]
+} = {
+    ENABLED: true,
+    SPAWNS: [
+        {
+            speedX: -3,
+            intervalFactor: 10,
+            width: 100,
+            height: 60,
+            color: ICONS.CLOUD,
+            type: ENTITY_TYPE.CLOUD,
+            getY: (canvas): number => canvas.height - 320,
         },
-        getY: (canvas, height = 0): number => canvas.height - height,
-    },
-]
+        {
+            speedX: -3,
+            intervalFactor: 8,
+            width: 100,
+            height: 60,
+            color: ICONS.CLOUD,
+            type: ENTITY_TYPE.CLOUD,
+            getY: (canvas): number => canvas.height - 450,
+        },
+        {
+            speedX: -3,
+            intervalFactor: 11,
+            width: 80,
+            height: 30,
+            color: ICONS.PLANE,
+            type: ENTITY_TYPE.PLANE,
+            getY: (canvas): number => canvas.height - 370,
+        },
+        {
+            speedX: -6,
+            intervalFactor: 15,
+            width: 100,
+            height: 30,
+            color: ICONS.PLANE,
+            type: ENTITY_TYPE.PLANE,
+            getY: (canvas): number => canvas.height - 490,
+        },
+        {
+            speedX: -2,
+            intervalFactor: 2,
+            width: 60,
+            color: ICONS.BUILDING,
+            type: ENTITY_TYPE.BUILDING,
+            getHeight: (): number => {
+                const minHeight = 20
+                const maxHeight = 300
+
+                return Math.floor(
+                    Math.random() * (maxHeight - minHeight + 1) + minHeight,
+                )
+            },
+            getY: (canvas, height = 0): number => canvas.height - height,
+        },
+    ],
+}

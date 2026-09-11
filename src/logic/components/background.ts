@@ -1,19 +1,13 @@
-import { SceneEntity } from "./sceneEntity.js"
+import { skyColorsAt } from "../sky.js"
 
-export class Background extends SceneEntity {
-    update(ctx: CanvasRenderingContext2D): void {
-        super.update(ctx)
-        ctx.drawImage(
-            this.image,
-            this.x + this.width,
-            this.y,
-            this.width,
-            this.height,
-        )
-    }
+export class Background {
+    update(ctx: CanvasRenderingContext2D, elapsedMs: number): void {
+        const { zenith, horizon } = skyColorsAt(elapsedMs)
+        const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height)
 
-    wrap(): void {
-        if (this.x === -this.width)
-            this.x = 0
+        gradient.addColorStop(0, zenith)
+        gradient.addColorStop(1, horizon)
+        ctx.fillStyle = gradient
+        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
     }
 }
