@@ -1,5 +1,5 @@
 import {
-    OBSTACLE_SPAWNS,
+    OBSTACLES,
     PLAYER_MOVES,
     CANVAS,
     TICK_MS,
@@ -87,14 +87,7 @@ export class Scene {
             y: CANVAS.height / 2,
             type: ENTITY_TYPE.CHARACTER,
         })
-        this.background = new Background({
-            width: CANVAS.width,
-            height: CANVAS.height,
-            color: ICONS.BACKGROUND,
-            x: 0,
-            y: 0,
-            type: ENTITY_TYPE.BACKGROUND,
-        })
+        this.background = new Background()
     }
 
     mount(): void {
@@ -106,10 +99,7 @@ export class Scene {
     }
 
     async paintIdle(): Promise<void> {
-        await Promise.all([
-            this.background.whenReady(),
-            this.character.whenReady(),
-        ])
+        await this.character.whenReady()
 
         if (this.status === GAME_STATUS.IDLE)
             this.draw()
@@ -280,7 +270,6 @@ export class Scene {
         this.character.speedX = 0
         this.character.speedY = 0
         this.character.image.src = ICONS.IRON_MAN
-        this.background.x = 0
         this.topScores = getTopScores()
     }
 
@@ -292,8 +281,12 @@ export class Scene {
         return this.frameNo === 1 || this.everyInterval(interval)
     }
 
+    elapsedMs(): number {
+        return this.frameNo * TICK_MS
+    }
+
     elapsedSeconds(): number {
-        return (this.frameNo * TICK_MS) / 1000
+        return this.elapsedMs() / 1000
     }
 
     stopOnCollision(): void {
@@ -318,7 +311,7 @@ export class Scene {
     }
 
     generateNewObstacles(): void {
-        for (const spawn of OBSTACLE_SPAWNS) {
+        for (const spawn of OBSTACLES.SPAWNS) {
             if (!this.shouldAddObstacle(this.character.width * spawn.intervalFactor))
                 continue
 
@@ -341,6 +334,9 @@ export class Scene {
     }
 
     updateObstacles(): void {
+        if (this.obstacles.length === 0)
+            return
+
         for (const obstacle of this.obstacles)
             obstacle.x += obstacle.speedX
 
@@ -365,7 +361,7 @@ export class Scene {
 
     draw(): void {
         this.clear()
-        this.background.update(this.context)
+        this.background.update(this.context, this.elapsedMs())
 
         for (const obstacle of this.obstacles)
             obstacle.update(this.context)
@@ -382,10 +378,10 @@ export class Scene {
         if (this.status === GAME_STATUS.PLAYING)
             this.scoreSeconds = this.elapsedSeconds()
 
-        this.background.wrap()
-
-        this.generateNewObstacles()
-        this.updateObstacles()
+        if (OBSTACLES.ENABLED) {
+            this.generateNewObstacles()
+            this.updateObstacles()
+        }
 
         this.character.newPos()
         this.character.speedX = 0
