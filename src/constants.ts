@@ -82,11 +82,11 @@ export const SCORE_HUD = {
 }
 
 export const ICONS = {
-    CLOUD: `${BASIC_ICON_PATH}/cloud.png`,
-    PLANE: `${BASIC_ICON_PATH}/plane.png`,
-    IMAGE: `${BASIC_ICON_PATH}/iron-man.png`,
-    BUILDING: `${BASIC_ICON_PATH}/building.png`,
-    IRON_MAN: `${BASIC_ICON_PATH}/iron-man.png`,
+    CLOUD: `${BASIC_ICON_PATH}/cloud.svg`,
+    PLANE: `${BASIC_ICON_PATH}/plane.svg`,
+    IMAGE: `${BASIC_ICON_PATH}/iron-man.svg`,
+    BUILDING: `${BASIC_ICON_PATH}/building.svg`,
+    IRON_MAN: `${BASIC_ICON_PATH}/iron-man.svg`,
     MOVE_LEFT: `${BASIC_ICON_PATH}/iron-man(move-left).png`,
     MOVE_RIGHT: `${BASIC_ICON_PATH}/iron-man(move).png`,
     MOVE_UP: `${BASIC_ICON_PATH}/iron-man.png`,

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 120" width="60" height="120">
+    <defs>
+        <pattern id="windows" width="10" height="7" patternUnits="userSpaceOnUse">
+            <rect x="2" y="1.5" width="6" height="4" rx="0.8" fill="#d0d0d0" />
+        </pattern>
+    </defs>
+    <rect width="60" height="120" fill="#2c2c2c" />
+    <rect width="60" height="6" fill="#1f1f1f" />
+    <rect x="5" y="8" width="50" height="105" fill="url(#windows)" />
+</svg>
