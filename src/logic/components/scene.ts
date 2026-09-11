@@ -333,7 +333,7 @@ export class Scene {
         }
     }
 
-    updateObstacles(): void {
+    updateObstaclesPosition(): void {
         if (this.obstacles.length === 0)
             return
 
@@ -380,7 +380,7 @@ export class Scene {
 
         if (OBSTACLES.ENABLED) {
             this.generateNewObstacles()
-            this.updateObstacles()
+            this.updateObstaclesPosition()
         }
 
         this.character.newPos()

@@ -611,14 +611,14 @@ describe("Scene", () => {
         })
     })
 
-    describe("updateObstacles", () => {
+    describe("updateObstaclesPosition", () => {
         it("moves obstacles and drops those off screen", () => {
             const scene = new Scene()
             const kept = { x: 10, speedX: -3, width: 5, update: jest.fn() }
             const dropped = { x: -10, speedX: -3, width: 5, update: jest.fn() }
             scene.obstacles = [asEntity(kept), asEntity(dropped)]
 
-            scene.updateObstacles()
+            scene.updateObstaclesPosition()
 
             expect(kept.x).toBe(7)
             expect(scene.obstacles).toEqual([kept])
@@ -725,7 +725,7 @@ describe("Scene", () => {
             jest.spyOn(scene, "generateNewObstacles").mockImplementation((): void => {
                 order.push("generate")
             })
-            jest.spyOn(scene, "updateObstacles").mockImplementation((): void => {
+            jest.spyOn(scene, "updateObstaclesPosition").mockImplementation((): void => {
                 order.push("obstacles")
             })
             jest.spyOn(scene, "moveCharacter").mockImplementation((): void => {
