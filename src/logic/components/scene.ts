@@ -1,6 +1,5 @@
 import {
     OBSTACLES,
-    PLAYER_MOVES,
     CANVAS,
     TICK_MS,
     KEYS,
@@ -17,7 +16,13 @@ import { Background } from "./background.js"
 import { Sound } from "./sound.js"
 import { ScoreHud } from "./scoreHud.js"
 import { GameControls } from "./gameControls.js"
-import { getTopScores, saveScore } from "../records.js"
+import { getTopScores, saveScore } from "./records.js"
+import {
+    clampPlayerX,
+    clampPlayerY,
+    resolveCharacterMotion,
+} from "./characterMotion.js"
+import type { CharacterAppearance } from "./characterMotion.js"
 
 const ARROW_KEYS = new Set<string>(Object.values(KEYS))
 const CHARACTER_SIZE = 50
@@ -50,7 +55,7 @@ export class Scene {
         this.canvas.height = CANVAS.height
         const context = this.canvas.getContext("2d")
 
-        if (!context)
+        if (!context) 
             throw new Error("2d canvas context is not available")
 
         this.context = context
@@ -101,12 +106,12 @@ export class Scene {
     async paintIdle(): Promise<void> {
         await this.character.whenReady()
 
-        if (this.status === GAME_STATUS.IDLE)
+        if (this.status === GAME_STATUS.IDLE) 
             this.draw()
     }
 
     bindInput(): void {
-        if (this.inputBound)
+        if (this.inputBound) 
             return
 
         this.inputBound = true
@@ -115,7 +120,7 @@ export class Scene {
             this.handleKeyDown(e)
         })
         window.addEventListener("keyup", (e: KeyboardEvent): void => {
-            if (this.key)
+            if (this.key) 
                 this.key[e.key] = false
         })
     }
@@ -175,7 +180,7 @@ export class Scene {
     }
 
     pause(): void {
-        if (this.status !== GAME_STATUS.PLAYING)
+        if (this.status !== GAME_STATUS.PLAYING) 
             return
 
         this.status = GAME_STATUS.PAUSED
@@ -185,14 +190,14 @@ export class Scene {
     }
 
     resume(): void {
-        if (this.status !== GAME_STATUS.PAUSED)
+        if (this.status !== GAME_STATUS.PAUSED) 
             return
 
         this.play()
     }
 
     restart(): void {
-        if (this.status !== GAME_STATUS.CRASHED)
+        if (this.status !== GAME_STATUS.CRASHED) 
             return
 
         this.collisionSound.stop()
@@ -205,7 +210,7 @@ export class Scene {
     }
 
     startMusic(): void {
-        if (this.musicStarted)
+        if (this.musicStarted) 
             return
 
         this.musicStarted = true
@@ -216,14 +221,18 @@ export class Scene {
         this.lastTime = 0
         this.accumulator = 0
         this.stopLoop()
-        this.rafId = requestAnimationFrame((time: number): void => this.tick(time))
+        this.rafId = requestAnimationFrame((time: number): void =>
+            this.tick(time),
+        )
     }
 
     tick(time: number): void {
-        if (this.status !== GAME_STATUS.PLAYING)
+        if (this.status !== GAME_STATUS.PLAYING) 
             return
 
-        this.rafId = requestAnimationFrame((nextTime: number): void => this.tick(nextTime))
+        this.rafId = requestAnimationFrame((nextTime: number): void =>
+            this.tick(nextTime),
+        )
 
         if (!this.lastTime) {
             this.lastTime = time
@@ -246,7 +255,7 @@ export class Scene {
     }
 
     stopLoop(): void {
-        if (this.rafId)
+        if (this.rafId) 
             cancelAnimationFrame(this.rafId)
 
         this.rafId = null
@@ -269,6 +278,7 @@ export class Scene {
         this.character.y = CANVAS.height / 2
         this.character.speedX = 0
         this.character.speedY = 0
+        this.character.fillColor = null
         this.character.image.src = ICONS.IRON_MAN
         this.topScores = getTopScores()
     }
@@ -312,7 +322,11 @@ export class Scene {
 
     generateNewObstacles(): void {
         for (const spawn of OBSTACLES.SPAWNS) {
-            if (!this.shouldAddObstacle(this.character.width * spawn.intervalFactor))
+            if (
+                !this.shouldAddObstacle(
+                    this.character.width * spawn.intervalFactor,
+                )
+            )
                 continue
 
             const height =
@@ -334,10 +348,10 @@ export class Scene {
     }
 
     updateObstaclesPosition(): void {
-        if (this.obstacles.length === 0)
+        if (this.obstacles.length === 0) 
             return
 
-        for (const obstacle of this.obstacles)
+        for (const obstacle of this.obstacles) 
             obstacle.x += obstacle.speedX
 
         this.obstacles = this.obstacles.filter(
@@ -346,24 +360,37 @@ export class Scene {
     }
 
     moveCharacter(): void {
-        if (this.status !== GAME_STATUS.PLAYING || !this.key)
+        if (this.status !== GAME_STATUS.PLAYING || !this.key) 
             return
 
-        for (const move of PLAYER_MOVES) {
-            if (!this.key[move.key])
-                continue
+        const motion = resolveCharacterMotion(this.key)
 
-            this.character.image.src = move.icon
-            this.character[move.axis] = move.clamp(this.character, this.canvas)
-            this.character[move.speedKey] += move.delta
+        this.character.speedX = motion.speedX
+        this.character.speedY = motion.speedY
+        this.character.x = clampPlayerX(this.character, this.canvas)
+        this.character.y = clampPlayerY(this.character, this.canvas)
+        this.applyAppearance(motion.appearance)
+    }
+
+    applyAppearance(appearance: CharacterAppearance | null): void {
+        if (!appearance) 
+            return
+
+        if (appearance.kind === "fill") {
+            this.character.fillColor = appearance.color
+
+            return
         }
+
+        this.character.fillColor = null
+        this.character.image.src = appearance.src
     }
 
     draw(): void {
         this.clear()
         this.background.update(this.context, this.elapsedMs())
 
-        for (const obstacle of this.obstacles)
+        for (const obstacle of this.obstacles) 
             obstacle.update(this.context)
 
         this.character.update(this.context)

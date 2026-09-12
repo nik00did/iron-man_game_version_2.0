@@ -7,6 +7,8 @@ import {
     ICONS,
     KEYS,
     OBSTACLES,
+    DIAGONAL_COLORS,
+    PLAYER_SPEED,
     SOUNDS,
     TICK_MS,
 } from "@src/constants.js"
@@ -34,32 +36,53 @@ const GameControls = jest.fn()
 const getTopScores = jest.fn()
 const saveScore = jest.fn()
 
-jest.unstable_mockModule("@src/logic/components/sound.js", (): { Sound: jest.Mock } => ({
-    Sound,
-}))
-jest.unstable_mockModule("@src/logic/components/sceneEntity.js", (): { SceneEntity: jest.Mock } => ({
-    SceneEntity: SceneEntityMock,
-}))
-jest.unstable_mockModule("@src/logic/components/background.js", (): { Background: jest.Mock } => ({
-    Background,
-}))
-jest.unstable_mockModule("@src/logic/components/scoreHud.js", (): { ScoreHud: jest.Mock } => ({
-    ScoreHud,
-}))
-jest.unstable_mockModule("@src/logic/components/gameControls.js", (): { GameControls: jest.Mock } => ({
-    GameControls,
-}))
-jest.unstable_mockModule("@src/logic/records.js", (): {
-    getTopScores: jest.Mock
-    saveScore: jest.Mock
-} => ({
-    getTopScores,
-    saveScore,
-}))
+jest.unstable_mockModule(
+    "@src/logic/components/sound.js",
+    (): { Sound: jest.Mock } => ({
+        Sound,
+    }),
+)
+jest.unstable_mockModule(
+    "@src/logic/components/sceneEntity.js",
+    (): { SceneEntity: jest.Mock } => ({
+        SceneEntity: SceneEntityMock,
+    }),
+)
+jest.unstable_mockModule(
+    "@src/logic/components/background.js",
+    (): { Background: jest.Mock } => ({
+        Background,
+    }),
+)
+jest.unstable_mockModule(
+    "@src/logic/components/scoreHud.js",
+    (): { ScoreHud: jest.Mock } => ({
+        ScoreHud,
+    }),
+)
+jest.unstable_mockModule(
+    "@src/logic/components/gameControls.js",
+    (): { GameControls: jest.Mock } => ({
+        GameControls,
+    }),
+)
+jest.unstable_mockModule(
+    "@src/logic/components/records.js",
+    (): {
+        getTopScores: jest.Mock
+        saveScore: jest.Mock
+    } => ({
+        getTopScores,
+        saveScore,
+    }),
+)
 
 const { Scene } = await import("@src/logic/components/scene.js")
 
-function getListener(mockFn: jest.Mock, type: string): (event?: KeyEvent) => void {
+function getListener(
+    mockFn: jest.Mock,
+    type: string,
+): (event?: KeyEvent) => void {
     const matched = mockFn.mock.calls.find((call) => call[0] === type)
 
     return matched[1] as (event?: KeyEvent) => void
@@ -92,30 +115,35 @@ describe("Scene", () => {
         }
         controls = { sync: jest.fn() }
 
-        Sound.mockImplementation((): {
-            play: jest.Mock
-            playFromStart: jest.Mock
-            stop: jest.Mock
-        } => ({
-            play: jest.fn(),
-            playFromStart: jest.fn(),
-            stop: jest.fn(),
-        }))
-        SceneEntityMock.mockImplementation((props: Partial<SceneEntityProps> = {}) => ({
-            width: props.width,
-            height: props.height,
-            color: props.color,
-            x: props.x,
-            y: props.y,
-            type: props.type,
-            speedX: props.speedX ?? 0,
-            speedY: 0,
-            image: { src: props.color ?? "" },
-            crashWith: jest.fn(() => false),
-            newPos: jest.fn(),
-            update: jest.fn(),
-            whenReady: jest.fn((): Promise<void> => Promise.resolve()),
-        }))
+        Sound.mockImplementation(
+            (): {
+                play: jest.Mock
+                playFromStart: jest.Mock
+                stop: jest.Mock
+            } => ({
+                play: jest.fn(),
+                playFromStart: jest.fn(),
+                stop: jest.fn(),
+            }),
+        )
+        SceneEntityMock.mockImplementation(
+            (props: Partial<SceneEntityProps> = {}) => ({
+                width: props.width,
+                height: props.height,
+                color: props.color,
+                x: props.x,
+                y: props.y,
+                type: props.type,
+                speedX: props.speedX ?? 0,
+                speedY: 0,
+                image: { src: props.color ?? "" },
+                fillColor: null,
+                crashWith: jest.fn(() => false),
+                newPos: jest.fn(),
+                update: jest.fn(),
+                whenReady: jest.fn((): Promise<void> => Promise.resolve()),
+            }),
+        )
         Background.mockImplementation((): { update: jest.Mock } => ({
             update: jest.fn(),
         }))
@@ -232,7 +260,10 @@ describe("Scene", () => {
             const scene = new Scene()
             scene.mount()
             const preventDefault = jest.fn()
-            const keydown = getListener(asMock(window.addEventListener), "keydown")
+            const keydown = getListener(
+                asMock(window.addEventListener),
+                "keydown",
+            )
 
             keydown({ key: KEYS.LEFT, preventDefault })
 
@@ -245,7 +276,10 @@ describe("Scene", () => {
             const scene = new Scene()
             scene.mount()
             const preventDefault = jest.fn()
-            const keydown = getListener(asMock(window.addEventListener), "keydown")
+            const keydown = getListener(
+                asMock(window.addEventListener),
+                "keydown",
+            )
 
             keydown({ key: GAME_KEYS.START, preventDefault })
 
@@ -258,7 +292,7 @@ describe("Scene", () => {
             const scene = new Scene()
             scene.mount()
 
-            if (scene.key)
+            if (scene.key) 
                 scene.key[KEYS.RIGHT] = true
 
             const keyup = getListener(asMock(window.addEventListener), "keyup")
@@ -279,7 +313,9 @@ describe("Scene", () => {
                 scene.context,
                 0,
             )
-            expect(asMock(scene.character.update)).toHaveBeenCalledWith(scene.context)
+            expect(asMock(scene.character.update)).toHaveBeenCalledWith(
+                scene.context,
+            )
             expect(asMock(scene.scoreHud.draw)).toHaveBeenCalled()
         })
 
@@ -316,7 +352,10 @@ describe("Scene", () => {
             scene.mount()
             scene.play()
             const preventDefault = jest.fn()
-            const keydown = getListener(asMock(window.addEventListener), "keydown")
+            const keydown = getListener(
+                asMock(window.addEventListener),
+                "keydown",
+            )
 
             keydown({ key: KEYS.LEFT, preventDefault })
 
@@ -330,7 +369,7 @@ describe("Scene", () => {
             const scene = new Scene()
             scene.play()
 
-            if (scene.key)
+            if (scene.key) 
                 scene.key[KEYS.RIGHT] = true
 
             scene.rafId = 77
@@ -372,7 +411,10 @@ describe("Scene", () => {
             scene.mount()
             scene.play()
             const preventDefault = jest.fn()
-            const keydown = getListener(asMock(window.addEventListener), "keydown")
+            const keydown = getListener(
+                asMock(window.addEventListener),
+                "keydown",
+            )
 
             keydown({ key: GAME_KEYS.PAUSE, preventDefault })
 
@@ -395,7 +437,7 @@ describe("Scene", () => {
             scene.character.y = 12
             scene.character.speedX = 4
 
-            if (scene.key)
+            if (scene.key) 
                 scene.key[KEYS.LEFT] = true
 
             scene.restart()
@@ -432,7 +474,10 @@ describe("Scene", () => {
             scene.mount()
             scene.status = GAME_STATUS.CRASHED
             const preventDefault = jest.fn()
-            const keydown = getListener(asMock(window.addEventListener), "keydown")
+            const keydown = getListener(
+                asMock(window.addEventListener),
+                "keydown",
+            )
 
             keydown({ key: GAME_KEYS.START, preventDefault })
 
@@ -471,13 +516,15 @@ describe("Scene", () => {
             scene.status = GAME_STATUS.PLAYING
             scene.rafId = 77
 
-            if (scene.key)
+            if (scene.key) 
                 scene.key[KEYS.RIGHT] = true
 
             scene.stopOnCollision()
 
             expect(asMock(scene.music.stop)).toHaveBeenCalledTimes(1)
-            expect(asMock(scene.collisionSound.playFromStart)).toHaveBeenCalledTimes(1)
+            expect(
+                asMock(scene.collisionSound.playFromStart),
+            ).toHaveBeenCalledTimes(1)
             expect(saveScore).toHaveBeenCalledWith(scene.scoreSeconds)
             expect(scene.status).toBe(GAME_STATUS.CRASHED)
             expect(scene.key).toEqual({})
@@ -550,7 +597,9 @@ describe("Scene", () => {
 
             scene.handleObstacleCollision()
 
-            expect(asMock(scene.character.crashWith)).toHaveBeenCalledWith(obstacle)
+            expect(asMock(scene.character.crashWith)).toHaveBeenCalledWith(
+                obstacle,
+            )
             expect(stopOnCollision).not.toHaveBeenCalled()
         })
 
@@ -641,7 +690,7 @@ describe("Scene", () => {
         it("does not apply moves when the scene is not playing", () => {
             const scene = new Scene()
 
-            if (scene.key)
+            if (scene.key) 
                 scene.key[KEYS.RIGHT] = true
 
             scene.moveCharacter()
@@ -653,14 +702,97 @@ describe("Scene", () => {
             const scene = new Scene()
             scene.status = GAME_STATUS.PLAYING
 
-            if (scene.key)
+            if (scene.key) 
                 scene.key[KEYS.RIGHT] = true
 
             scene.moveCharacter()
 
             expect(scene.character.image.src).toBe(ICONS.MOVE_RIGHT)
+            expect(scene.character.fillColor).toBeNull()
             expect(scene.character.x).toBe(0)
-            expect(scene.character.speedX).toBe(4)
+            expect(scene.character.speedX).toBe(PLAYER_SPEED)
+        })
+
+        it("restores the default pose when no arrow keys are held", () => {
+            const scene = new Scene()
+            scene.status = GAME_STATUS.PLAYING
+
+            if (scene.key) 
+                scene.key[KEYS.RIGHT] = true
+
+            scene.moveCharacter()
+
+            if (scene.key) 
+                scene.key[KEYS.RIGHT] = false
+
+            scene.moveCharacter()
+
+            expect(scene.character.image.src).toBe(ICONS.IRON_MAN)
+            expect(scene.character.fillColor).toBeNull()
+            expect(scene.character.speedX).toBe(0)
+        })
+
+        it("uses a diagonal fill and normalized speed for combined arrows", () => {
+            const scene = new Scene()
+            scene.status = GAME_STATUS.PLAYING
+            const diagonalSpeed = PLAYER_SPEED / Math.SQRT2
+
+            if (scene.key) {
+                scene.key[KEYS.RIGHT] = true
+                scene.key[KEYS.UP] = true
+            }
+
+            scene.moveCharacter()
+
+            expect(scene.character.fillColor).toBe(DIAGONAL_COLORS.UP_RIGHT)
+            expect(scene.character.speedX).toBeCloseTo(diagonalSpeed)
+            expect(scene.character.speedY).toBeCloseTo(-diagonalSpeed)
+        })
+
+        it("uses the same diagonal whether left or up is pressed first", () => {
+            const leftThenUp = new Scene()
+            leftThenUp.status = GAME_STATUS.PLAYING
+
+            if (leftThenUp.key) {
+                leftThenUp.key[KEYS.LEFT] = true
+                leftThenUp.key[KEYS.UP] = true
+            }
+
+            leftThenUp.moveCharacter()
+
+            const upThenLeft = new Scene()
+            upThenLeft.status = GAME_STATUS.PLAYING
+
+            if (upThenLeft.key) {
+                upThenLeft.key[KEYS.UP] = true
+                upThenLeft.key[KEYS.LEFT] = true
+            }
+
+            upThenLeft.moveCharacter()
+
+            expect(leftThenUp.character.fillColor).toBe(DIAGONAL_COLORS.UP_LEFT)
+            expect(upThenLeft.character.fillColor).toBe(
+                leftThenUp.character.fillColor,
+            )
+        })
+
+        it("cancels opposite keys and keeps the previous pose", () => {
+            const scene = new Scene()
+            scene.status = GAME_STATUS.PLAYING
+
+            if (scene.key) 
+                scene.key[KEYS.RIGHT] = true
+
+            scene.moveCharacter()
+
+            if (scene.key) 
+                scene.key[KEYS.LEFT] = true
+
+            scene.moveCharacter()
+
+            expect(scene.character.speedX).toBe(0)
+            expect(scene.character.image.src).toBe(ICONS.MOVE_RIGHT)
+            expect(scene.character.fillColor).toBeNull()
         })
     })
 
@@ -689,7 +821,9 @@ describe("Scene", () => {
             const scene = new Scene()
             scene.status = GAME_STATUS.PLAYING
             scene.lastTime = 1000
-            const update = jest.spyOn(scene, "update").mockImplementation((): void => {})
+            const update = jest
+                .spyOn(scene, "update")
+                .mockImplementation((): void => {})
 
             scene.tick(1000 + TICK_MS)
 
@@ -701,7 +835,9 @@ describe("Scene", () => {
             scene.play()
             scene.lastTime = 1000
             scene.pause()
-            const update = jest.spyOn(scene, "update").mockImplementation((): void => {})
+            const update = jest
+                .spyOn(scene, "update")
+                .mockImplementation((): void => {})
 
             scene.resume()
             scene.tick(5000)
@@ -716,18 +852,24 @@ describe("Scene", () => {
             jest.replaceProperty(OBSTACLES, "ENABLED", true)
             const scene = new Scene()
             const order: string[] = []
-            jest.spyOn(scene, "handleObstacleCollision").mockImplementation((): void => {
-                order.push("collision")
-            })
+            jest.spyOn(scene, "handleObstacleCollision").mockImplementation(
+                (): void => {
+                    order.push("collision")
+                },
+            )
             jest.spyOn(scene, "clear").mockImplementation((): void => {
                 order.push("clear")
             })
-            jest.spyOn(scene, "generateNewObstacles").mockImplementation((): void => {
-                order.push("generate")
-            })
-            jest.spyOn(scene, "updateObstaclesPosition").mockImplementation((): void => {
-                order.push("obstacles")
-            })
+            jest.spyOn(scene, "generateNewObstacles").mockImplementation(
+                (): void => {
+                    order.push("generate")
+                },
+            )
+            jest.spyOn(scene, "updateObstaclesPosition").mockImplementation(
+                (): void => {
+                    order.push("obstacles")
+                },
+            )
             jest.spyOn(scene, "moveCharacter").mockImplementation((): void => {
                 order.push("move")
             })
@@ -768,7 +910,9 @@ describe("Scene", () => {
                 scene.context,
                 TICK_MS,
             )
-            expect(asMock(scene.character.update)).toHaveBeenCalledWith(scene.context)
+            expect(asMock(scene.character.update)).toHaveBeenCalledWith(
+                scene.context,
+            )
             expect(asMock(scene.scoreHud.draw)).toHaveBeenCalledWith(
                 scene.context,
                 scene.scoreSeconds,

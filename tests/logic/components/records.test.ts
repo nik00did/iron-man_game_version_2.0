@@ -1,5 +1,5 @@
 import { SCORE_HUD } from "@src/constants.js"
-import { getTopScores, saveScore } from "@src/logic/records.js"
+import { getTopScores, saveScore } from "@src/logic/components/records.js"
 
 type StorageMock = {
     getItem: jest.Mock

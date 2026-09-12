@@ -1,6 +1,6 @@
 import { CANVAS, SKY } from "@src/constants.js"
 import { Background } from "@src/logic/components/background.js"
-import { skyColorsAt } from "@src/logic/sky.js"
+import { skyColorsAt } from "@src/logic/components/sky.js"
 
 describe("Background", () => {
     describe("update", () => {

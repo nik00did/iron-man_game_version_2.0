@@ -1,5 +1,7 @@
-import { SKY } from "../constants.js"
-import type { SkyStop } from "../constants.js"
+import { SKY } from "../../constants.js"
+import type { SkyStop } from "../../constants.js"
+
+// TODO groype with background
 
 type Rgb = {
     r: number

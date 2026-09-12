@@ -10,15 +10,6 @@ export type CanvasSize = {
     height: number
 }
 
-export type PlayerMove = {
-    key: string
-    icon: string
-    axis: "x" | "y"
-    speedKey: "speedX" | "speedY"
-    delta: number
-    clamp: (piece: MovablePiece, canvas: CanvasSize) => number
-}
-
 type ObstacleSpawnBase = {
     speedX: number
     intervalFactor: number
@@ -52,6 +43,15 @@ export const CANVAS = {
 }
 
 export const TICK_MS = 20
+
+export const PLAYER_SPEED = 4
+
+export const DIAGONAL_COLORS = {
+    UP_RIGHT: "#4aa3de",
+    UP_LEFT: "#7ec8e8",
+    DOWN_RIGHT: "#e07a5f",
+    DOWN_LEFT: "#c97b63",
+} as const
 
 export const SKY = {
     PERIOD_MS: 10_000,
@@ -146,43 +146,6 @@ export const GAME_CONTROLS = {
     RESUME_CLASS: "resume",
     RESTART_CLASS: "restart",
 }
-
-export const PLAYER_MOVES: PlayerMove[] = [
-    {
-        key: KEYS.LEFT,
-        icon: ICONS.MOVE_LEFT,
-        axis: "x",
-        speedKey: "speedX",
-        delta: -4,
-        clamp: (piece): number => Math.max(piece.x, 0),
-    },
-    {
-        key: KEYS.UP,
-        icon: ICONS.MOVE_UP,
-        axis: "y",
-        speedKey: "speedY",
-        delta: -4,
-        clamp: (piece): number => Math.max(piece.y, 0),
-    },
-    {
-        key: KEYS.RIGHT,
-        icon: ICONS.MOVE_RIGHT,
-        axis: "x",
-        speedKey: "speedX",
-        delta: 4,
-        clamp: (piece, canvas): number =>
-            Math.min(piece.x, canvas.width - piece.width),
-    },
-    {
-        key: KEYS.DOWN,
-        icon: ICONS.MOVE_DOWN,
-        axis: "y",
-        speedKey: "speedY",
-        delta: 4,
-        clamp: (piece, canvas): number =>
-            Math.min(piece.y, canvas.height - piece.height),
-    },
-]
 
 export const ENTITY_TYPE = {
     CLOUD: "cloud",
