@@ -81,16 +81,35 @@ export const SCORE_HUD = {
     RANK_GAP: 8,
 }
 
+const OBSTACLE_ICON_PATH = `${BASIC_ICON_PATH}/obstacles`
+const CONTROL_ICON_PATH = `${BASIC_ICON_PATH}/controls`
+const IRON_MAN_ICON_PATH = `${BASIC_ICON_PATH}/character/ironMan`
+
+const OBSTACLE_ICONS = {
+    CLOUD: `${OBSTACLE_ICON_PATH}/cloud.svg`,
+    PLANE: `${OBSTACLE_ICON_PATH}/plane.svg`,
+    BUILDING: `${OBSTACLE_ICON_PATH}/building.svg`,
+}
+
+const CONTROL_ICONS = {
+    START: `${CONTROL_ICON_PATH}/start.svg`,
+    PAUSE: `${CONTROL_ICON_PATH}/pause.svg`,
+    RESUME: `${CONTROL_ICON_PATH}/resume.svg`,
+    RESTART: `${CONTROL_ICON_PATH}/restart.svg`,
+}
+
+const IRON_MAN_ICONS = {
+    IRON_MAN: `${IRON_MAN_ICON_PATH}/iron-man.png`,
+    MOVE_LEFT: `${IRON_MAN_ICON_PATH}/iron-man(move-left).png`,
+    MOVE_RIGHT: `${IRON_MAN_ICON_PATH}/iron-man(move).png`,
+    MOVE_UP: `${IRON_MAN_ICON_PATH}/iron-man.png`,
+    MOVE_DOWN: `${IRON_MAN_ICON_PATH}/iron-man(down).png`,
+}
+
 export const ICONS = {
-    CLOUD: `${BASIC_ICON_PATH}/cloud.png`,
-    PLANE: `${BASIC_ICON_PATH}/plane.png`,
-    IMAGE: `${BASIC_ICON_PATH}/iron-man.png`,
-    BUILDING: `${BASIC_ICON_PATH}/building.png`,
-    IRON_MAN: `${BASIC_ICON_PATH}/iron-man.png`,
-    MOVE_LEFT: `${BASIC_ICON_PATH}/iron-man(move-left).png`,
-    MOVE_RIGHT: `${BASIC_ICON_PATH}/iron-man(move).png`,
-    MOVE_UP: `${BASIC_ICON_PATH}/iron-man.png`,
-    MOVE_DOWN: `${BASIC_ICON_PATH}/iron-man(down).png`,
+    ...OBSTACLE_ICONS,
+    ...CONTROL_ICONS,
+    ...IRON_MAN_ICONS,
 }
 
 export const SOUNDS = {
