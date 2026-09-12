@@ -68,17 +68,17 @@ body {
 }
 
 .game-btn.start {
-    background-image: url("/assets/icons/start.svg");
+    background-image: url("/assets/icons/controls/start.svg");
 }
 
 .game-btn.pause {
-    background-image: url("/assets/icons/pause.svg");
+    background-image: url("/assets/icons/controls/pause.svg");
 }
 
 .game-btn.resume {
-    background-image: url("/assets/icons/resume.svg");
+    background-image: url("/assets/icons/controls/resume.svg");
 }
 
 .game-btn.restart {
-    background-image: url("/assets/icons/restart.svg");
+    background-image: url("/assets/icons/controls/restart.svg");
 }
