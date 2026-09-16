@@ -1,4 +1,10 @@
-import { DIAGONAL_COLORS, ICONS, KEYS, PLAYER_SPEED } from "../../constants.js"
+import {
+    DIAGONAL_COLORS,
+    ICONS,
+    KEYS,
+    PLAYER_IDLE_SPEED,
+    PLAYER_SPEED,
+} from "../../constants.js"
 import type { CanvasSize, MovablePiece } from "../../constants.js"
 
 export type CharacterAppearance =
@@ -32,11 +38,11 @@ export function resolveCharacterMotion(
     const dirY = axisDirection(up, down)
 
     if (dirX === 0 && dirY === 0) {
-        if (!(left || right || up || down)) 
+        if (!(left || right || up || down))
             return idleMotion()
 
         return {
-            speedX: 0,
+            speedX: PLAYER_IDLE_SPEED,
             speedY: 0,
             appearance: null,
         }
@@ -45,7 +51,7 @@ export function resolveCharacterMotion(
     const length = Math.hypot(dirX, dirY)
 
     return {
-        speedX: (PLAYER_SPEED * dirX) / length,
+        speedX: dirX === 0 ? PLAYER_IDLE_SPEED : (PLAYER_SPEED * dirX) / length,
         speedY: (PLAYER_SPEED * dirY) / length,
         appearance: appearanceFor(dirX, dirY),
     }
@@ -53,7 +59,7 @@ export function resolveCharacterMotion(
 
 function idleMotion(): CharacterMotion {
     return {
-        speedX: 0,
+        speedX: PLAYER_IDLE_SPEED,
         speedY: 0,
         appearance: { kind: "image", src: ICONS.IRON_MAN },
     }

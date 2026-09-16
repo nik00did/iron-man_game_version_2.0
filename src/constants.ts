@@ -45,6 +45,8 @@ export const CANVAS = {
 export const TICK_MS = 20
 
 export const PLAYER_SPEED = 4
+export const PLAYER_IDLE_SPEED = -1
+export const CHARACTER_START_X = 100
 
 export const DIAGONAL_COLORS = {
     UP_RIGHT: "#4aa3de",

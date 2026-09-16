@@ -8,6 +8,8 @@ import {
     KEYS,
     OBSTACLES,
     DIAGONAL_COLORS,
+    CHARACTER_START_X,
+    PLAYER_IDLE_SPEED,
     PLAYER_SPEED,
     SOUNDS,
     TICK_MS,
@@ -217,7 +219,7 @@ describe("Scene", () => {
                 width: 50,
                 height: 50,
                 color: ICONS.IRON_MAN,
-                x: 0,
+                x: CHARACTER_START_X,
                 y: CANVAS.height / 2,
                 type: ENTITY_TYPE.CHARACTER,
             })
@@ -448,7 +450,7 @@ describe("Scene", () => {
             expect(scene.frameNo).toBe(0)
             expect(scene.scoreSeconds).toBe(0)
             expect(scene.obstacles).toEqual([])
-            expect(scene.character.x).toBe(0)
+            expect(scene.character.x).toBe(CHARACTER_START_X)
             expect(scene.character.y).toBe(CANVAS.height / 2)
             expect(scene.character.speedX).toBe(0)
             expect(scene.character.image.src).toBe(ICONS.IRON_MAN)
@@ -709,7 +711,7 @@ describe("Scene", () => {
 
             expect(scene.character.image.src).toBe(ICONS.MOVE_RIGHT)
             expect(scene.character.fillColor).toBeNull()
-            expect(scene.character.x).toBe(0)
+            expect(scene.character.x).toBe(CHARACTER_START_X)
             expect(scene.character.speedX).toBe(PLAYER_SPEED)
         })
 
@@ -729,7 +731,7 @@ describe("Scene", () => {
 
             expect(scene.character.image.src).toBe(ICONS.IRON_MAN)
             expect(scene.character.fillColor).toBeNull()
-            expect(scene.character.speedX).toBe(0)
+            expect(scene.character.speedX).toBe(PLAYER_IDLE_SPEED)
         })
 
         it("uses a diagonal fill and normalized speed for combined arrows", () => {
@@ -790,7 +792,7 @@ describe("Scene", () => {
 
             scene.moveCharacter()
 
-            expect(scene.character.speedX).toBe(0)
+            expect(scene.character.speedX).toBe(PLAYER_IDLE_SPEED)
             expect(scene.character.image.src).toBe(ICONS.MOVE_RIGHT)
             expect(scene.character.fillColor).toBeNull()
         })

@@ -1,6 +1,7 @@
 import {
     OBSTACLES,
     CANVAS,
+    CHARACTER_START_X,
     TICK_MS,
     KEYS,
     ICONS,
@@ -88,7 +89,7 @@ export class Scene {
             width: CHARACTER_SIZE,
             height: CHARACTER_SIZE,
             color: ICONS.IRON_MAN,
-            x: 0,
+            x: CHARACTER_START_X,
             y: CANVAS.height / 2,
             type: ENTITY_TYPE.CHARACTER,
         })
@@ -274,7 +275,7 @@ export class Scene {
         this.scoreSeconds = 0
         this.obstacles = []
         this.key = {}
-        this.character.x = 0
+        this.character.x = CHARACTER_START_X
         this.character.y = CANVAS.height / 2
         this.character.speedX = 0
         this.character.speedY = 0

@@ -3,6 +3,7 @@ import {
     DIAGONAL_COLORS,
     ICONS,
     KEYS,
+    PLAYER_IDLE_SPEED,
     PLAYER_SPEED,
 } from "@src/constants.js"
 import {
@@ -16,7 +17,7 @@ const DIAGONAL_SPEED = PLAYER_SPEED / Math.SQRT2
 describe("resolveCharacterMotion", () => {
     it("returns the default pose when no keys are pressed", () => {
         expect(resolveCharacterMotion({})).toEqual({
-            speedX: 0,
+            speedX: PLAYER_IDLE_SPEED,
             speedY: 0,
             appearance: { kind: "image", src: ICONS.IRON_MAN },
         })
@@ -24,7 +25,7 @@ describe("resolveCharacterMotion", () => {
 
     it("returns the default pose when key state is missing", () => {
         expect(resolveCharacterMotion(null)).toEqual({
-            speedX: 0,
+            speedX: PLAYER_IDLE_SPEED,
             speedY: 0,
             appearance: { kind: "image", src: ICONS.IRON_MAN },
         })
@@ -35,6 +36,14 @@ describe("resolveCharacterMotion", () => {
             speedX: PLAYER_SPEED,
             speedY: 0,
             appearance: { kind: "image", src: ICONS.MOVE_RIGHT },
+        })
+    })
+
+    it("keeps drifting backward when only a vertical key is held", () => {
+        expect(resolveCharacterMotion({ [KEYS.UP]: true })).toEqual({
+            speedX: PLAYER_IDLE_SPEED,
+            speedY: -PLAYER_SPEED,
+            appearance: { kind: "image", src: ICONS.MOVE_UP },
         })
     })
 
@@ -86,7 +95,7 @@ describe("resolveCharacterMotion", () => {
                 [KEYS.UP]: true,
             }),
         ).toEqual({
-            speedX: 0,
+            speedX: PLAYER_IDLE_SPEED,
             speedY: -PLAYER_SPEED,
             appearance: { kind: "image", src: ICONS.MOVE_UP },
         })
@@ -99,7 +108,7 @@ describe("resolveCharacterMotion", () => {
                 [KEYS.RIGHT]: true,
             }),
         ).toEqual({
-            speedX: 0,
+            speedX: PLAYER_IDLE_SPEED,
             speedY: 0,
             appearance: null,
         })
