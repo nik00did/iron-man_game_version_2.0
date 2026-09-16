@@ -1,5 +1,8 @@
 import { SceneEntity } from "@src/logic/components/sceneEntity.js"
-import type { Box, SceneEntityProps } from "@src/logic/components/sceneEntity.js"
+import type {
+    Box,
+    SceneEntityProps,
+} from "@src/logic/components/sceneEntity.js"
 
 function createEntity(overrides: Partial<SceneEntityProps> = {}): SceneEntity {
     return new SceneEntity({
@@ -54,6 +57,7 @@ describe("SceneEntity", () => {
                 speedY: 0,
             })
             expect(entity.image.src).toBe("hero.png")
+            expect(entity.fillColor).toBeNull()
         })
 
         it("uses the given speedX", () => {
@@ -93,7 +97,9 @@ describe("SceneEntity", () => {
         })
 
         it("resolves when decode fails", async () => {
-            const decode = jest.fn((): Promise<void> => Promise.reject(new Error("bad image")))
+            const decode = jest.fn((): Promise<void> =>
+                Promise.reject(new Error("bad image")),
+            )
             Object.defineProperty(globalThis, "Image", {
                 configurable: true,
                 value: jest.fn(() => ({ src: "", complete: false, decode })),
@@ -119,6 +125,22 @@ describe("SceneEntity", () => {
                 20,
                 30,
             )
+        })
+
+        it("fills a rectangle when fillColor is set", () => {
+            const entity = createEntity({ x: 8, y: 12, width: 20, height: 30 })
+            entity.fillColor = "#4aa3de"
+            const ctx = {
+                drawImage: jest.fn(),
+                fillRect: jest.fn(),
+                fillStyle: "",
+            }
+
+            entity.update(ctx as unknown as CanvasRenderingContext2D)
+
+            expect(ctx.fillStyle).toBe("#4aa3de")
+            expect(ctx.fillRect).toHaveBeenCalledWith(8, 12, 20, 30)
+            expect(ctx.drawImage).not.toHaveBeenCalled()
         })
     })
 

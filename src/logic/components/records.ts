@@ -1,4 +1,6 @@
-import { SCORE_HUD } from "../constants.js"
+import { SCORE_HUD } from "../../constants.js"
+
+// TODO group with scoreHud
 
 function isScore(value: unknown): value is number {
     return typeof value === "number" && Number.isFinite(value)

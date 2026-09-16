@@ -1,6 +1,6 @@
 import { SKY } from "@src/constants.js"
 import type { SkyStop } from "@src/constants.js"
-import { skyColorsAt } from "@src/logic/sky.js"
+import { skyColorsAt } from "@src/logic/components/sky.js"
 
 const STOPS: readonly SkyStop[] = [
     { zenith: "#000000", horizon: "#000000" },

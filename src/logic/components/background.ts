@@ -1,4 +1,4 @@
-import { skyColorsAt } from "../sky.js"
+import { skyColorsAt } from "./sky.js"
 
 export class Background {
     update(ctx: CanvasRenderingContext2D, elapsedMs: number): void {

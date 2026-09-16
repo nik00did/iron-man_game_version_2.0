@@ -16,6 +16,7 @@ export type Box = {
 }
 
 export class SceneEntity {
+    // TODO: rename to Character
     type: string
     color: string
     width: number
@@ -25,8 +26,17 @@ export class SceneEntity {
     x: number
     y: number
     image: HTMLImageElement
+    fillColor: string | null
 
-    constructor({ width, height, color, x, y, type, speedX = 0 }: SceneEntityProps) {
+    constructor({
+        width,
+        height,
+        color,
+        x,
+        y,
+        type,
+        speedX = 0,
+    }: SceneEntityProps) {
         this.type = type
         this.color = color
         this.width = width
@@ -35,17 +45,25 @@ export class SceneEntity {
         this.speedY = 0
         this.x = x
         this.y = y
+        this.fillColor = null
 
         this.image = new Image()
         this.image.src = color
     }
 
     update(ctx: CanvasRenderingContext2D): void {
+        if (this.fillColor) {
+            ctx.fillStyle = this.fillColor
+            ctx.fillRect(this.x, this.y, this.width, this.height)
+
+            return
+        }
+
         ctx.drawImage(this.image, this.x, this.y, this.width, this.height)
     }
 
     whenReady(): Promise<void> {
-        if (this.image.complete)
+        if (this.image.complete) 
             return Promise.resolve()
 
         if (typeof this.image.decode === "function") {
@@ -62,8 +80,12 @@ export class SceneEntity {
                 return
             }
 
-            this.image.addEventListener("load", (): void => resolve(), { once: true })
-            this.image.addEventListener("error", (): void => resolve(), { once: true })
+            this.image.addEventListener("load", (): void => resolve(), {
+                once: true,
+            })
+            this.image.addEventListener("error", (): void => resolve(), {
+                once: true,
+            })
         })
     }
 
