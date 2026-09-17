@@ -1,9 +1,10 @@
 import { SCORE_HUD } from "../../constants.js"
 
-// TODO group with scoreHud
+function toScore(value: unknown): number | null {
+    if (typeof value !== "number" || !Number.isFinite(value))
+        return null
 
-function isScore(value: unknown): value is number {
-    return typeof value === "number" && Number.isFinite(value)
+    return Math.floor(value)
 }
 
 export function getTopScores(): number[] {
@@ -18,15 +19,18 @@ export function getTopScores(): number[] {
         if (!Array.isArray(parsed))
             return []
 
-        return parsed.filter(isScore).slice(0, SCORE_HUD.MAX_RECORDS)
+        return parsed
+            .map(toScore)
+            .filter((score): score is number => score !== null)
+            .slice(0, SCORE_HUD.MAX_RECORDS)
     } catch {
         return []
     }
 }
 
-export function saveScore(seconds: number): number[] {
-    const topScores = [...getTopScores(), seconds]
-        .filter(isScore)
+export function saveScore(score: number): number[] {
+    const next = toScore(score)
+    const topScores = [...getTopScores(), ...(next === null ? [] : [next])]
         .sort((a, b): number => b - a)
         .slice(0, SCORE_HUD.MAX_RECORDS)
 

@@ -1,214 +1,61 @@
 import { SceneEntity } from "@src/logic/components/sceneEntity.js"
-import type {
-    Box,
-    SceneEntityProps,
-} from "@src/logic/components/sceneEntity.js"
+import type { SceneEntityProps } from "@src/logic/components/sceneEntity.js"
 
-function createEntity(overrides: Partial<SceneEntityProps> = {}): SceneEntity {
+function createEntity(
+    overrides: Partial<SceneEntityProps> = {},
+): SceneEntity {
     return new SceneEntity({
-        width: 10,
-        height: 10,
-        color: "iron-man.png",
         x: 0,
         y: 0,
-        type: "character",
+        width: 10,
+        height: 10,
         ...overrides,
     })
 }
 
-function box(x: number, y: number, width = 10, height = 10): Box {
-    return { x, y, width, height }
-}
-
 describe("SceneEntity", () => {
-    beforeEach(() => {
-        Object.defineProperty(globalThis, "Image", {
-            configurable: true,
-            value: jest.fn(() => ({ src: "" })),
-        })
-    })
-
-    afterEach(() => {
-        Reflect.deleteProperty(globalThis, "Image")
-    })
-
     describe("constructor", () => {
-        it("stores props, defaults speedX to 0, and sets image.src from color", () => {
-            const props = {
-                width: 50,
-                height: 40,
-                color: "hero.png",
-                x: 3,
-                y: 7,
-                type: "plane",
-            }
+        it("stores position, size, and defaults speedX to 0", () => {
+            const entity = createEntity({ x: 3, y: 7, width: 50, height: 40 })
 
-            const entity = createEntity(props)
-
-            expect(Image).toHaveBeenCalledTimes(1)
             expect(entity).toMatchObject({
-                width: 50,
-                height: 40,
-                color: "hero.png",
                 x: 3,
                 y: 7,
-                type: "plane",
+                width: 50,
+                height: 40,
                 speedX: 0,
-                speedY: 0,
             })
-            expect(entity.image.src).toBe("hero.png")
-            expect(entity.fillColor).toBeNull()
         })
 
         it("uses the given speedX", () => {
-            const speedX = -4
-
-            const entity = createEntity({ speedX })
+            const entity = createEntity({ speedX: -4 })
 
             expect(entity.speedX).toBe(-4)
         })
     })
 
-    describe("whenReady", () => {
-        it("resolves immediately when the image is already complete", async () => {
-            const decode = jest.fn()
-            Object.defineProperty(globalThis, "Image", {
-                configurable: true,
-                value: jest.fn(() => ({ src: "", complete: true, decode })),
-            })
-            const entity = createEntity()
+    describe("move", () => {
+        it("adds speedX to x", () => {
+            const entity = createEntity({ x: 10, y: 20, speedX: -3 })
 
-            await entity.whenReady()
+            entity.move()
 
-            expect(decode).not.toHaveBeenCalled()
-        })
-
-        it("waits for decode when the image is not complete", async () => {
-            const decode = jest.fn((): Promise<void> => Promise.resolve())
-            Object.defineProperty(globalThis, "Image", {
-                configurable: true,
-                value: jest.fn(() => ({ src: "", complete: false, decode })),
-            })
-            const entity = createEntity()
-
-            await entity.whenReady()
-
-            expect(decode).toHaveBeenCalledTimes(1)
-        })
-
-        it("resolves when decode fails", async () => {
-            const decode = jest.fn((): Promise<void> =>
-                Promise.reject(new Error("bad image")),
-            )
-            Object.defineProperty(globalThis, "Image", {
-                configurable: true,
-                value: jest.fn(() => ({ src: "", complete: false, decode })),
-            })
-            const entity = createEntity()
-
-            await expect(entity.whenReady()).resolves.toBeUndefined()
+            expect(entity.x).toBe(7)
+            expect(entity.y).toBe(20)
         })
     })
 
-    describe("update", () => {
-        it("draws the image at the entity position and size", () => {
-            const entity = createEntity({ x: 8, y: 12, width: 20, height: 30 })
-            const ctx = { drawImage: jest.fn() }
+    describe("isOffScreen", () => {
+        it("returns false while the entity is still visible", () => {
+            const entity = createEntity({ x: 10, width: 10 })
 
-            entity.update(ctx as unknown as CanvasRenderingContext2D)
-
-            expect(ctx.drawImage).toHaveBeenCalledTimes(1)
-            expect(ctx.drawImage).toHaveBeenCalledWith(
-                entity.image,
-                8,
-                12,
-                20,
-                30,
-            )
+            expect(entity.isOffScreen()).toBe(false)
         })
 
-        it("fills a rectangle when fillColor is set", () => {
-            const entity = createEntity({ x: 8, y: 12, width: 20, height: 30 })
-            entity.fillColor = "#4aa3de"
-            const ctx = {
-                drawImage: jest.fn(),
-                fillRect: jest.fn(),
-                fillStyle: "",
-            }
+        it("returns true when the entity has fully left the left edge", () => {
+            const entity = createEntity({ x: -10, width: 10 })
 
-            entity.update(ctx as unknown as CanvasRenderingContext2D)
-
-            expect(ctx.fillStyle).toBe("#4aa3de")
-            expect(ctx.fillRect).toHaveBeenCalledWith(8, 12, 20, 30)
-            expect(ctx.drawImage).not.toHaveBeenCalled()
-        })
-    })
-
-    describe("newPos", () => {
-        it("adds speedX and speedY to position", () => {
-            const entity = createEntity({ x: 10, y: 20, speedX: 3 })
-            entity.speedY = -2
-
-            entity.newPos()
-
-            expect(entity.x).toBe(13)
-            expect(entity.y).toBe(18)
-        })
-    })
-
-    describe("crashWith", () => {
-        it("returns true when boxes overlap", () => {
-            const entity = createEntity({ x: 0, y: 0 })
-            const other = box(5, 5)
-
-            const crashed = entity.crashWith(other)
-
-            expect(crashed).toBe(true)
-        })
-
-        it("returns true when edges touch", () => {
-            const entity = createEntity({ x: 0, y: 0 })
-            const other = box(10, 0)
-
-            const crashed = entity.crashWith(other)
-
-            expect(crashed).toBe(true)
-        })
-
-        it("returns false when the other box is fully to the right", () => {
-            const entity = createEntity({ x: 0, y: 0 })
-            const other = box(11, 0)
-
-            const crashed = entity.crashWith(other)
-
-            expect(crashed).toBe(false)
-        })
-
-        it("returns false when the other box is fully to the left", () => {
-            const entity = createEntity({ x: 20, y: 0 })
-            const other = box(0, 0)
-
-            const crashed = entity.crashWith(other)
-
-            expect(crashed).toBe(false)
-        })
-
-        it("returns false when the other box is fully below", () => {
-            const entity = createEntity({ x: 0, y: 0 })
-            const other = box(0, 11)
-
-            const crashed = entity.crashWith(other)
-
-            expect(crashed).toBe(false)
-        })
-
-        it("returns false when the other box is fully above", () => {
-            const entity = createEntity({ x: 0, y: 20 })
-            const other = box(0, 0)
-
-            const crashed = entity.crashWith(other)
-
-            expect(crashed).toBe(false)
+            expect(entity.isOffScreen()).toBe(true)
         })
     })
 })

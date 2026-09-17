@@ -157,7 +157,20 @@ export const ENTITY_TYPE = {
     PLANE: "plane",
     CHARACTER: "character",
     BUILDING: "building",
+    ENERGY_TOKEN: "energy-token",
 }
+
+export const ENERGY_TOKEN = {
+    SIZE: 50,
+    SPEED: -2,
+    GAP_CHANCE: 0.35,
+    MAX_ON_SCREEN: 2,
+    Y_MIN: 80,
+    POINTS: 1,
+    CORE: "#e8fbff",
+    MID: "#4aa3de",
+    EDGE: "#0a6a8a",
+} as const
 
 export const OBSTACLE_SPAWN = {
     CLOUD_Y_FROM_BOTTOM: { min: 320, max: 450 },
