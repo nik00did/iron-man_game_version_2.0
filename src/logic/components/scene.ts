@@ -333,6 +333,8 @@ export class Scene {
             const height =
                 "getHeight" in spawn ? spawn.getHeight() : spawn.height
             const y = spawn.getY(this.canvas, height)
+            const speedX =
+                "getSpeed" in spawn ? spawn.getSpeed() : spawn.speedX
 
             this.obstacles.push(
                 new SceneEntity({
@@ -342,7 +344,7 @@ export class Scene {
                     x: this.canvas.width,
                     y,
                     type: spawn.type,
-                    speedX: spawn.speedX,
+                    speedX,
                 }),
             )
         }

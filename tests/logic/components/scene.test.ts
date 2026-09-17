@@ -11,6 +11,7 @@ import {
     CHARACTER_START_X,
     PLAYER_IDLE_SPEED,
     PLAYER_SPEED,
+    OBSTACLE_SPAWN,
     SOUNDS,
     TICK_MS,
 } from "@src/constants.js"
@@ -624,6 +625,7 @@ describe("Scene", () => {
 
     describe("generateNewObstacles", () => {
         it("pushes a SceneEntity for each spawn when shouldAddObstacle is true", () => {
+            const random = jest.spyOn(Math, "random").mockReturnValue(0)
             const scene = new Scene()
             scene.frameNo = 1
 
@@ -635,21 +637,32 @@ describe("Scene", () => {
                 height: 60,
                 color: ICONS.CLOUD,
                 x: CANVAS.width,
-                y: CANVAS.height - 320,
+                y: CANVAS.height - OBSTACLE_SPAWN.CLOUD_Y_FROM_BOTTOM.min,
                 type: ENTITY_TYPE.CLOUD,
                 speedX: -3,
+            })
+            expect(SceneEntityMock).toHaveBeenCalledWith({
+                width: 80,
+                height: 30,
+                color: ICONS.PLANE,
+                x: CANVAS.width,
+                y: CANVAS.height - OBSTACLE_SPAWN.PLANE_Y_FROM_BOTTOM.min,
+                type: ENTITY_TYPE.PLANE,
+                speedX: OBSTACLE_SPAWN.PLANE_SPEED.min,
             })
             const buildingProps = SceneEntityMock.mock.calls[
                 SceneEntityMock.mock.calls.length - 1
             ][0] as SceneEntityProps
             expect(buildingProps).toMatchObject({
                 width: 60,
+                height: OBSTACLE_SPAWN.BUILDING_HEIGHT.min,
                 color: ICONS.BUILDING,
                 x: CANVAS.width,
                 type: ENTITY_TYPE.BUILDING,
                 speedX: -2,
             })
             expect(buildingProps.y).toBe(CANVAS.height - buildingProps.height)
+            random.mockRestore()
         })
 
         it("does not push obstacles when shouldAddObstacle is false", () => {
@@ -712,7 +725,7 @@ describe("Scene", () => {
             expect(scene.character.image.src).toBe(ICONS.MOVE_RIGHT)
             expect(scene.character.fillColor).toBeNull()
             expect(scene.character.x).toBe(CHARACTER_START_X)
-            expect(scene.character.speedX).toBe(PLAYER_SPEED)
+            expect(scene.character.speedX).toBe(PLAYER_IDLE_SPEED + PLAYER_SPEED)
         })
 
         it("restores the default pose when no arrow keys are held", () => {
@@ -747,7 +760,9 @@ describe("Scene", () => {
             scene.moveCharacter()
 
             expect(scene.character.fillColor).toBe(DIAGONAL_COLORS.UP_RIGHT)
-            expect(scene.character.speedX).toBeCloseTo(diagonalSpeed)
+            expect(scene.character.speedX).toBeCloseTo(
+                PLAYER_IDLE_SPEED + diagonalSpeed,
+            )
             expect(scene.character.speedY).toBeCloseTo(-diagonalSpeed)
         })
 

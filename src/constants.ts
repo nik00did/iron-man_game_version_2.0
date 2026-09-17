@@ -1,3 +1,5 @@
+import { randomInt } from "./utils.js"
+
 export type MovablePiece = {
     x: number
     y: number
@@ -11,7 +13,6 @@ export type CanvasSize = {
 }
 
 type ObstacleSpawnBase = {
-    speedX: number
     intervalFactor: number
     width: number
     color: string
@@ -19,13 +20,15 @@ type ObstacleSpawnBase = {
     getY: (canvas: CanvasSize, height?: number) => number
 }
 
-export type ObstacleSpawn =
-    | (ObstacleSpawnBase & {
-          height: number
-      })
-    | (ObstacleSpawnBase & {
-          getHeight: () => number
-      })
+type ObstacleSize =
+    | { height: number }
+    | { getHeight: () => number }
+
+type ObstacleSpeed =
+    | { speedX: number }
+    | { getSpeed: () => number }
+
+export type ObstacleSpawn = ObstacleSpawnBase & ObstacleSize & ObstacleSpeed
 
 export type GameStatus = "idle" | "playing" | "paused" | "crashed"
 
@@ -156,6 +159,13 @@ export const ENTITY_TYPE = {
     BUILDING: "building",
 }
 
+export const OBSTACLE_SPAWN = {
+    CLOUD_Y_FROM_BOTTOM: { min: 320, max: 450 },
+    PLANE_Y_FROM_BOTTOM: { min: 370, max: 490 },
+    PLANE_SPEED: { min: -6, max: -3 },
+    BUILDING_HEIGHT: { min: 20, max: 300 },
+} as const
+
 export const OBSTACLES: {
     ENABLED: boolean
     SPAWNS: ObstacleSpawn[]
@@ -164,39 +174,35 @@ export const OBSTACLES: {
     SPAWNS: [
         {
             speedX: -3,
-            intervalFactor: 10,
+            intervalFactor: 5,
             width: 100,
             height: 60,
             color: ICONS.CLOUD,
             type: ENTITY_TYPE.CLOUD,
-            getY: (canvas): number => canvas.height - 320,
+            getY: (canvas): number =>
+                canvas.height -
+                randomInt(
+                    OBSTACLE_SPAWN.CLOUD_Y_FROM_BOTTOM.min,
+                    OBSTACLE_SPAWN.CLOUD_Y_FROM_BOTTOM.max,
+                ),
         },
         {
-            speedX: -3,
-            intervalFactor: 8,
-            width: 100,
-            height: 60,
-            color: ICONS.CLOUD,
-            type: ENTITY_TYPE.CLOUD,
-            getY: (canvas): number => canvas.height - 450,
-        },
-        {
-            speedX: -3,
-            intervalFactor: 11,
+            intervalFactor: 13,
             width: 80,
             height: 30,
             color: ICONS.PLANE,
             type: ENTITY_TYPE.PLANE,
-            getY: (canvas): number => canvas.height - 370,
-        },
-        {
-            speedX: -6,
-            intervalFactor: 15,
-            width: 100,
-            height: 30,
-            color: ICONS.PLANE,
-            type: ENTITY_TYPE.PLANE,
-            getY: (canvas): number => canvas.height - 490,
+            getSpeed: (): number =>
+                randomInt(
+                    OBSTACLE_SPAWN.PLANE_SPEED.min,
+                    OBSTACLE_SPAWN.PLANE_SPEED.max,
+                ),
+            getY: (canvas): number =>
+                canvas.height -
+                randomInt(
+                    OBSTACLE_SPAWN.PLANE_Y_FROM_BOTTOM.min,
+                    OBSTACLE_SPAWN.PLANE_Y_FROM_BOTTOM.max,
+                ),
         },
         {
             speedX: -2,
@@ -204,14 +210,11 @@ export const OBSTACLES: {
             width: 60,
             color: ICONS.BUILDING,
             type: ENTITY_TYPE.BUILDING,
-            getHeight: (): number => {
-                const minHeight = 20
-                const maxHeight = 300
-
-                return Math.floor(
-                    Math.random() * (maxHeight - minHeight + 1) + minHeight,
-                )
-            },
+            getHeight: (): number =>
+                randomInt(
+                    OBSTACLE_SPAWN.BUILDING_HEIGHT.min,
+                    OBSTACLE_SPAWN.BUILDING_HEIGHT.max,
+                ),
             getY: (canvas, height = 0): number => canvas.height - height,
         },
     ],

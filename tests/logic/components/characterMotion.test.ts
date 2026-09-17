@@ -31,11 +31,16 @@ describe("resolveCharacterMotion", () => {
         })
     })
 
-    it("uses the cardinal pose and speed for a single arrow", () => {
+    it("uses the cardinal pose and adds idle drift to horizontal speed", () => {
         expect(resolveCharacterMotion({ [KEYS.RIGHT]: true })).toEqual({
-            speedX: PLAYER_SPEED,
+            speedX: PLAYER_IDLE_SPEED + PLAYER_SPEED,
             speedY: 0,
             appearance: { kind: "image", src: ICONS.MOVE_RIGHT },
+        })
+        expect(resolveCharacterMotion({ [KEYS.LEFT]: true })).toEqual({
+            speedX: PLAYER_IDLE_SPEED - PLAYER_SPEED,
+            speedY: 0,
+            appearance: { kind: "image", src: ICONS.MOVE_LEFT },
         })
     })
 
@@ -62,7 +67,7 @@ describe("resolveCharacterMotion", () => {
             kind: "fill",
             color: DIAGONAL_COLORS.UP_LEFT,
         })
-        expect(leftThenUp.speedX).toBeCloseTo(-DIAGONAL_SPEED)
+        expect(leftThenUp.speedX).toBeCloseTo(PLAYER_IDLE_SPEED - DIAGONAL_SPEED)
         expect(leftThenUp.speedY).toBeCloseTo(-DIAGONAL_SPEED)
     })
 
