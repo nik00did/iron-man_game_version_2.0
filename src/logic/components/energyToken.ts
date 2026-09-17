@@ -1,4 +1,5 @@
 import { ENERGY_TOKEN } from "../../constants.js"
+import { SceneEntity } from "./sceneEntity.js"
 
 export type EnergyTokenProps = {
     x: number
@@ -6,19 +7,15 @@ export type EnergyTokenProps = {
     speedX?: number
 }
 
-export class EnergyToken {
-    x: number
-    y: number
-    width: number
-    height: number
-    speedX: number
-
+export class EnergyToken extends SceneEntity {
     constructor({ x, y, speedX = ENERGY_TOKEN.SPEED }: EnergyTokenProps) {
-        this.x = x
-        this.y = y
-        this.width = ENERGY_TOKEN.SIZE
-        this.height = ENERGY_TOKEN.SIZE
-        this.speedX = speedX
+        super({
+            x,
+            y,
+            width: ENERGY_TOKEN.SIZE,
+            height: ENERGY_TOKEN.SIZE,
+            speedX,
+        })
     }
 
     update(ctx: CanvasRenderingContext2D): void {
@@ -45,13 +42,5 @@ export class EnergyToken {
         ctx.arc(cx, cy, radius, 0, Math.PI * 2)
         ctx.fillStyle = gradient
         ctx.fill()
-    }
-
-    move(): void {
-        this.x += this.speedX
-    }
-
-    isOffScreen(): boolean {
-        return this.x + this.width <= 0
     }
 }

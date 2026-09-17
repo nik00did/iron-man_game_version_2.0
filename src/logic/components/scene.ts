@@ -13,8 +13,9 @@ import {
     GAME_CONTROLS,
 } from "../../constants.js"
 import type { GameStatus } from "../../constants.js"
-import { SceneEntity } from "./sceneEntity.js"
 import type { Box } from "./sceneEntity.js"
+import { Character } from "./character.js"
+import { Obstacle } from "./obstacle.js"
 import { EnergyToken } from "./energyToken.js"
 import { Background } from "./background.js"
 import { Sound } from "./sound.js"
@@ -27,7 +28,6 @@ import {
     clampPlayerY,
     resolveCharacterMotion,
 } from "./characterMotion.js"
-import type { CharacterAppearance } from "./characterMotion.js"
 
 const ARROW_KEYS = new Set<string>(Object.values(KEYS))
 const CHARACTER_SIZE = 50
@@ -44,7 +44,7 @@ export class Scene {
     accumulator: number
     musicStarted: boolean
     inputBound: boolean
-    obstacles: SceneEntity[]
+    obstacles: Obstacle[]
     tokens: EnergyToken[]
     tokensCollected: number
     pendingEnergyToken: boolean
@@ -54,7 +54,7 @@ export class Scene {
     scoreSeconds: number
     music: Sound
     collisionSound: Sound
-    character: SceneEntity
+    character: Character
     background: Background
 
     constructor() {
@@ -95,13 +95,12 @@ export class Scene {
             onRestart: (): void => this.restart(),
         })
 
-        this.character = new SceneEntity({
+        this.character = new Character({
             width: CHARACTER_SIZE,
             height: CHARACTER_SIZE,
             color: ICONS.IRON_MAN,
             x: CHARACTER_START_X,
             y: CANVAS.height / 2,
-            type: ENTITY_TYPE.CHARACTER,
         })
         this.background = new Background()
     }
@@ -350,7 +349,7 @@ export class Scene {
                 "getSpeed" in spawn ? spawn.getSpeed() : spawn.speedX
 
             this.obstacles.push(
-                new SceneEntity({
+                new Obstacle({
                     width: spawn.width,
                     height,
                     color: spawn.color,
@@ -462,11 +461,11 @@ export class Scene {
         if (this.obstacles.length === 0) 
             return
 
-        for (const obstacle of this.obstacles) 
-            obstacle.x += obstacle.speedX
+        for (const obstacle of this.obstacles)
+            obstacle.move()
 
         this.obstacles = this.obstacles.filter(
-            (obstacle): boolean => obstacle.x + obstacle.width > 0,
+            (obstacle): boolean => !obstacle.isOffScreen(),
         )
     }
 
@@ -480,21 +479,7 @@ export class Scene {
         this.character.speedY = motion.speedY
         this.character.x = clampPlayerX(this.character, this.canvas)
         this.character.y = clampPlayerY(this.character, this.canvas)
-        this.applyAppearance(motion.appearance)
-    }
-
-    applyAppearance(appearance: CharacterAppearance | null): void {
-        if (!appearance) 
-            return
-
-        if (appearance.kind === "fill") {
-            this.character.fillColor = appearance.color
-
-            return
-        }
-
-        this.character.fillColor = null
-        this.character.image.src = appearance.src
+        this.character.applyAppearance(motion.appearance)
     }
 
     draw(): void {
