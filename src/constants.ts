@@ -166,6 +166,7 @@ export const ENERGY_TOKEN = {
     GAP_CHANCE: 0.35,
     MAX_ON_SCREEN: 2,
     Y_MIN: 80,
+    POINTS: 1,
     CORE: "#e8fbff",
     MID: "#4aa3de",
     EDGE: "#0a6a8a",

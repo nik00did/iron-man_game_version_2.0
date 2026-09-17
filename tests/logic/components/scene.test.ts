@@ -242,8 +242,8 @@ describe("Scene", () => {
         GameControls.mockImplementation(() => controls)
         getTopScores.mockReset()
         saveScore.mockReset()
-        getTopScores.mockReturnValue([12.5, 8, 3])
-        saveScore.mockReturnValue([12.5, 8, 3])
+        getTopScores.mockReturnValue([12, 8, 3])
+        saveScore.mockReturnValue([12, 8, 3])
 
         Sound.mockClear()
         CharacterMock.mockClear()
@@ -314,8 +314,8 @@ describe("Scene", () => {
             expect(Background).toHaveBeenCalledTimes(1)
             expect(ScoreHud).toHaveBeenCalledTimes(1)
             expect(getTopScores).toHaveBeenCalledTimes(1)
-            expect(scene.topScores).toEqual([12.5, 8, 3])
-            expect(scene.scoreSeconds).toBe(0)
+            expect(scene.topScores).toEqual([12, 8, 3])
+            expect(scene.score).toBe(0)
             expect(scene.obstacles).toEqual([])
             expect(scene.tokens).toEqual([])
             expect(scene.tokensCollected).toBe(0)
@@ -524,7 +524,7 @@ describe("Scene", () => {
             const scene = new Scene()
             scene.status = GAME_STATUS.CRASHED
             scene.frameNo = 40
-            scene.scoreSeconds = 8
+            scene.score = 8
             scene.obstacles = [asObstacle({})]
             scene.tokens = [asToken({})]
             scene.tokensCollected = 3
@@ -542,7 +542,7 @@ describe("Scene", () => {
             expect(asMock(scene.music.playFromStart)).toHaveBeenCalledTimes(1)
             expect(scene.status).toBe(GAME_STATUS.PLAYING)
             expect(scene.frameNo).toBe(0)
-            expect(scene.scoreSeconds).toBe(0)
+            expect(scene.score).toBe(0)
             expect(scene.obstacles).toEqual([])
             expect(scene.tokens).toEqual([])
             expect(scene.tokensCollected).toBe(0)
@@ -609,6 +609,24 @@ describe("Scene", () => {
         })
     })
 
+    describe("currentScore", () => {
+        it("floors elapsed seconds to integer points", () => {
+            const scene = new Scene()
+            scene.frameNo = 50
+
+            expect(scene.elapsedSeconds()).toBe(1)
+            expect(scene.currentScore()).toBe(1)
+        })
+
+        it("adds a point for each collected energy token", () => {
+            const scene = new Scene()
+            scene.frameNo = 50
+            scene.tokensCollected = 3
+
+            expect(scene.currentScore()).toBe(1 + 3 * ENERGY_TOKEN.POINTS)
+        })
+    })
+
     describe("stopOnCollision", () => {
         it("saves the score, plays collision audio, and shows restart", () => {
             const scene = new Scene()
@@ -624,11 +642,22 @@ describe("Scene", () => {
             expect(
                 asMock(scene.collisionSound.playFromStart),
             ).toHaveBeenCalledTimes(1)
-            expect(saveScore).toHaveBeenCalledWith(scene.scoreSeconds)
+            expect(saveScore).toHaveBeenCalledWith(scene.score)
             expect(scene.status).toBe(GAME_STATUS.CRASHED)
             expect(scene.key).toEqual({})
             expect(cancelAnimationFrame).toHaveBeenCalledWith(77)
             expect(controls.sync).toHaveBeenCalledWith(GAME_STATUS.CRASHED)
+        })
+
+        it("saves floored time plus collected token points", () => {
+            const scene = new Scene()
+            scene.frameNo = 50
+            scene.tokensCollected = 2
+
+            scene.stopOnCollision()
+
+            expect(scene.score).toBe(3)
+            expect(saveScore).toHaveBeenCalledWith(3)
         })
     })
 
@@ -1227,7 +1256,7 @@ describe("Scene", () => {
                 "hud",
             ])
             expect(scene.frameNo).toBe(1)
-            expect(scene.scoreSeconds).toBe(TICK_MS / 1000)
+            expect(scene.score).toBe(0)
             expect(scene.character.speedX).toBe(0)
             expect(scene.character.speedY).toBe(0)
             expect(asMock(scene.background.update)).toHaveBeenCalledWith(
@@ -1239,7 +1268,7 @@ describe("Scene", () => {
             )
             expect(asMock(scene.scoreHud.draw)).toHaveBeenCalledWith(
                 scene.context,
-                scene.scoreSeconds,
+                scene.score,
                 scene.topScores,
             )
         })

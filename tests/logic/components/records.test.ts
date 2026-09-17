@@ -65,6 +65,14 @@ describe("records", () => {
 
             expect(result).toEqual([1, 2, 3])
         })
+
+        it("floors stored fractional scores", () => {
+            storage.getItem.mockReturnValue(JSON.stringify([12.5, 8.9, 3.1]))
+
+            const result = getTopScores()
+
+            expect(result).toEqual([12, 8, 3])
+        })
     })
 
     describe("saveScore", () => {
@@ -113,6 +121,18 @@ describe("records", () => {
             const result = saveScore(Number.NaN)
 
             expect(result).toEqual([10])
+        })
+
+        it("floors a fractional score before persisting", () => {
+            storage.getItem.mockReturnValue(JSON.stringify([10]))
+
+            const result = saveScore(8.7)
+
+            expect(result).toEqual([10, 8])
+            expect(storage.setItem).toHaveBeenCalledWith(
+                SCORE_HUD.STORAGE_KEY,
+                JSON.stringify([10, 8]),
+            )
         })
     })
 })

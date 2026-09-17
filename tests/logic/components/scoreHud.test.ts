@@ -27,18 +27,31 @@ function createCtx(): HudCtx {
 
 describe("ScoreHud", () => {
     describe("drawScore", () => {
-        it("draws the labeled score at the top center", () => {
+        it("draws the labeled integer score at the top center", () => {
             const hud = new ScoreHud()
             const ctx = createCtx()
 
-            hud.drawScore(ctx as unknown as CanvasRenderingContext2D, 11.23)
+            hud.drawScore(ctx as unknown as CanvasRenderingContext2D, 11)
 
             expect(ctx.font).toBe(SCORE_HUD.FONT)
             expect(ctx.textBaseline).toBe("top")
             expect(ctx.fillStyle).toBe(SCORE_HUD.SCORE_COLOR)
             expect(ctx.textAlign).toBe("center")
             expect(ctx.fillText).toHaveBeenCalledWith(
-                "Your score: 11.23s",
+                "Your score: 11",
+                500,
+                SCORE_HUD.SCORE_Y,
+            )
+        })
+
+        it("floors fractional scores for display", () => {
+            const hud = new ScoreHud()
+            const ctx = createCtx()
+
+            hud.drawScore(ctx as unknown as CanvasRenderingContext2D, 11.23)
+
+            expect(ctx.fillText).toHaveBeenCalledWith(
+                "Your score: 11",
                 500,
                 SCORE_HUD.SCORE_Y,
             )
@@ -58,19 +71,19 @@ describe("ScoreHud", () => {
             expect(ctx.fillText).toHaveBeenCalledTimes(3)
             expect(ctx.fillText).toHaveBeenNthCalledWith(
                 1,
-                "1. 10.00s",
+                "1. 10",
                 SCORE_HUD.RANK_X,
                 SCORE_HUD.RANK_Y,
             )
             expect(ctx.fillText).toHaveBeenNthCalledWith(
                 2,
-                "2. 8.00s",
+                "2. 8",
                 SCORE_HUD.RANK_X,
                 SCORE_HUD.RANK_Y + lineHeight,
             )
             expect(ctx.fillText).toHaveBeenNthCalledWith(
                 3,
-                "3. 3.00s",
+                "3. 3",
                 SCORE_HUD.RANK_X,
                 SCORE_HUD.RANK_Y + lineHeight * 2,
             )
@@ -107,12 +120,12 @@ describe("ScoreHud", () => {
 
             hud.draw(
                 ctx as unknown as CanvasRenderingContext2D,
-                11.23,
+                11,
                 topScores,
             )
 
             expect(ctx.save).toHaveBeenCalledTimes(1)
-            expect(drawScore).toHaveBeenCalledWith(ctx, 11.23)
+            expect(drawScore).toHaveBeenCalledWith(ctx, 11)
             expect(drawRating).toHaveBeenCalledWith(ctx, topScores)
             expect(ctx.restore).toHaveBeenCalledTimes(1)
         })

@@ -51,7 +51,7 @@ export class Scene {
     scoreHud: ScoreHud
     controls: GameControls
     topScores: number[]
-    scoreSeconds: number
+    score: number
     music: Sound
     collisionSound: Sound
     character: Character
@@ -84,7 +84,7 @@ export class Scene {
         this.pendingEnergyToken = false
         this.scoreHud = new ScoreHud()
         this.topScores = getTopScores()
-        this.scoreSeconds = 0
+        this.score = 0
 
         this.music = new Sound(SOUNDS.FIRST_FIGHT)
         this.collisionSound = new Sound(SOUNDS.LOVE_ME_AGAIN)
@@ -281,7 +281,7 @@ export class Scene {
 
     resetWorld(): void {
         this.frameNo = 0
-        this.scoreSeconds = 0
+        this.score = 0
         this.obstacles = []
         this.tokens = []
         this.tokensCollected = 0
@@ -312,9 +312,16 @@ export class Scene {
         return this.elapsedMs() / 1000
     }
 
+    currentScore(): number {
+        return (
+            Math.floor(this.elapsedSeconds()) +
+            this.tokensCollected * ENERGY_TOKEN.POINTS
+        )
+    }
+
     stopOnCollision(): void {
-        this.scoreSeconds = this.elapsedSeconds()
-        this.topScores = saveScore(this.scoreSeconds)
+        this.score = this.currentScore()
+        this.topScores = saveScore(this.score)
         this.music.stop()
         this.collisionSound.playFromStart()
         this.clearKeys()
@@ -493,7 +500,7 @@ export class Scene {
             token.update(this.context)
 
         this.character.update(this.context)
-        this.scoreHud.draw(this.context, this.scoreSeconds, this.topScores)
+        this.scoreHud.draw(this.context, this.score, this.topScores)
     }
 
     update(): void {
@@ -503,7 +510,7 @@ export class Scene {
         this.frameNo += 1
 
         if (this.status === GAME_STATUS.PLAYING)
-            this.scoreSeconds = this.elapsedSeconds()
+            this.score = this.currentScore()
 
         if (OBSTACLES.ENABLED) {
             this.generateNewObstacles()
