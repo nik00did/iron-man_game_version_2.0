@@ -51,7 +51,7 @@ export function resolveCharacterMotion(
     const length = Math.hypot(dirX, dirY)
 
     return {
-        speedX: dirX === 0 ? PLAYER_IDLE_SPEED : (PLAYER_SPEED * dirX) / length,
+        speedX: PLAYER_IDLE_SPEED + (PLAYER_SPEED * dirX) / length,
         speedY: (PLAYER_SPEED * dirY) / length,
         appearance: appearanceFor(dirX, dirY),
     }

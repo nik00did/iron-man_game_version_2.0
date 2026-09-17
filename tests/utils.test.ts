@@ -1,4 +1,4 @@
-import { addAudioElement } from "@src/utils.js"
+import { addAudioElement, randomInt } from "@src/utils.js"
 
 type AudioMock = {
     src: string
@@ -42,5 +42,25 @@ describe("addAudioElement", () => {
         expect(audio.style.display).toBe("none")
         expect(appendChild).toHaveBeenCalledWith(audio)
         expect(result).toBe(audio)
+    })
+})
+
+describe("randomInt", () => {
+    afterEach(() => {
+        jest.restoreAllMocks()
+    })
+
+    it("returns the minimum when Math.random is 0", () => {
+        jest.spyOn(Math, "random").mockReturnValue(0)
+
+        expect(randomInt(320, 450)).toBe(320)
+        expect(randomInt(-6, -3)).toBe(-6)
+    })
+
+    it("returns the maximum when Math.random is just below 1", () => {
+        jest.spyOn(Math, "random").mockReturnValue(0.999999)
+
+        expect(randomInt(320, 450)).toBe(450)
+        expect(randomInt(-6, -3)).toBe(-3)
     })
 })
