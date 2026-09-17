@@ -7,17 +7,21 @@ import {
     ICONS,
     SOUNDS,
     ENTITY_TYPE,
+    ENERGY_TOKEN,
     GAME_STATUS,
     GAME_KEYS,
     GAME_CONTROLS,
 } from "../../constants.js"
 import type { GameStatus } from "../../constants.js"
 import { SceneEntity } from "./sceneEntity.js"
+import type { Box } from "./sceneEntity.js"
+import { EnergyToken } from "./energyToken.js"
 import { Background } from "./background.js"
 import { Sound } from "./sound.js"
 import { ScoreHud } from "./scoreHud.js"
 import { GameControls } from "./gameControls.js"
 import { getTopScores, saveScore } from "./records.js"
+import { randomInt } from "../../utils.js"
 import {
     clampPlayerX,
     clampPlayerY,
@@ -41,6 +45,9 @@ export class Scene {
     musicStarted: boolean
     inputBound: boolean
     obstacles: SceneEntity[]
+    tokens: EnergyToken[]
+    tokensCollected: number
+    pendingEnergyToken: boolean
     scoreHud: ScoreHud
     controls: GameControls
     topScores: number[]
@@ -72,6 +79,9 @@ export class Scene {
         this.musicStarted = false
         this.inputBound = false
         this.obstacles = []
+        this.tokens = []
+        this.tokensCollected = 0
+        this.pendingEnergyToken = false
         this.scoreHud = new ScoreHud()
         this.topScores = getTopScores()
         this.scoreSeconds = 0
@@ -274,6 +284,9 @@ export class Scene {
         this.frameNo = 0
         this.scoreSeconds = 0
         this.obstacles = []
+        this.tokens = []
+        this.tokensCollected = 0
+        this.pendingEnergyToken = false
         this.key = {}
         this.character.x = CHARACTER_START_X
         this.character.y = CANVAS.height / 2
@@ -347,7 +360,102 @@ export class Scene {
                     speedX,
                 }),
             )
+
+            if (spawn.type === ENTITY_TYPE.BUILDING)
+                this.queueEnergyToken()
         }
+    }
+
+    queueEnergyToken(): void {
+        if (this.pendingEnergyToken)
+            return
+
+        if (this.tokens.length >= ENERGY_TOKEN.MAX_ON_SCREEN)
+            return
+
+        if (Math.random() >= ENERGY_TOKEN.GAP_CHANCE)
+            return
+
+        const buildings = this.obstacles.filter(
+            (obstacle): boolean => obstacle.type === ENTITY_TYPE.BUILDING,
+        )
+
+        if (buildings.length < 2)
+            return
+
+        this.pendingEnergyToken = true
+    }
+
+    isSpawnLaneClear(): boolean {
+        const size = ENERGY_TOKEN.SIZE
+        const laneLeft = this.canvas.width
+        const clearRight = laneLeft - size
+        const laneRight = laneLeft + size
+        const blocksLane = (entity: Box): boolean =>
+            !(
+                entity.x + entity.width <= clearRight ||
+                entity.x >= laneRight
+            )
+
+        return (
+            !this.obstacles.some(
+                (obstacle): boolean =>
+                    obstacle.type === ENTITY_TYPE.BUILDING &&
+                    blocksLane(obstacle),
+            ) && !this.tokens.some(blocksLane)
+        )
+    }
+
+    maybeSpawnEnergyToken(): void {
+        if (!this.pendingEnergyToken)
+            return
+
+        if (this.tokens.length >= ENERGY_TOKEN.MAX_ON_SCREEN)
+            return
+
+        if (!this.isSpawnLaneClear())
+            return
+
+        const size = ENERGY_TOKEN.SIZE
+        const maxY = this.canvas.height - size
+
+        if (maxY < ENERGY_TOKEN.Y_MIN)
+            return
+
+        this.tokens.push(
+            new EnergyToken({
+                x: this.canvas.width,
+                y: randomInt(ENERGY_TOKEN.Y_MIN, maxY),
+            }),
+        )
+        this.pendingEnergyToken = false
+    }
+
+    handleTokenCollection(): void {
+        const remaining: EnergyToken[] = []
+
+        for (const token of this.tokens) {
+            if (this.character.crashWith(token)) {
+                this.tokensCollected += 1
+                continue
+            }
+
+            remaining.push(token)
+        }
+
+        this.tokens = remaining
+    }
+
+    updateTokensPosition(): void {
+        if (this.tokens.length === 0)
+            return
+
+        for (const token of this.tokens)
+            token.move()
+
+        this.tokens = this.tokens.filter(
+            (token): boolean => !token.isOffScreen(),
+        )
     }
 
     updateObstaclesPosition(): void {
@@ -393,8 +501,11 @@ export class Scene {
         this.clear()
         this.background.update(this.context, this.elapsedMs())
 
-        for (const obstacle of this.obstacles) 
+        for (const obstacle of this.obstacles)
             obstacle.update(this.context)
+
+        for (const token of this.tokens)
+            token.update(this.context)
 
         this.character.update(this.context)
         this.scoreHud.draw(this.context, this.scoreSeconds, this.topScores)
@@ -402,6 +513,7 @@ export class Scene {
 
     update(): void {
         this.handleObstacleCollision()
+        this.handleTokenCollection()
 
         this.frameNo += 1
 
@@ -412,6 +524,9 @@ export class Scene {
             this.generateNewObstacles()
             this.updateObstaclesPosition()
         }
+
+        this.maybeSpawnEnergyToken()
+        this.updateTokensPosition()
 
         this.character.newPos()
         this.character.speedX = 0

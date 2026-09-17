@@ -12,11 +12,14 @@ import {
     PLAYER_IDLE_SPEED,
     PLAYER_SPEED,
     OBSTACLE_SPAWN,
+    ENERGY_TOKEN,
     SOUNDS,
     TICK_MS,
 } from "@src/constants.js"
 import type { SceneEntity } from "@src/logic/components/sceneEntity.js"
 import type { SceneEntityProps } from "@src/logic/components/sceneEntity.js"
+import type { EnergyToken } from "@src/logic/components/energyToken.js"
+import type { EnergyTokenProps } from "@src/logic/components/energyToken.js"
 
 type KeyEvent = { key: string; preventDefault?: () => void }
 
@@ -33,6 +36,7 @@ type WrapperMock = {
 
 const Sound = jest.fn()
 const SceneEntityMock = jest.fn()
+const EnergyTokenMock = jest.fn()
 const Background = jest.fn()
 const ScoreHud = jest.fn()
 const GameControls = jest.fn()
@@ -49,6 +53,12 @@ jest.unstable_mockModule(
     "@src/logic/components/sceneEntity.js",
     (): { SceneEntity: jest.Mock } => ({
         SceneEntity: SceneEntityMock,
+    }),
+)
+jest.unstable_mockModule(
+    "@src/logic/components/energyToken.js",
+    (): { EnergyToken: jest.Mock } => ({
+        EnergyToken: EnergyTokenMock,
     }),
 )
 jest.unstable_mockModule(
@@ -99,6 +109,10 @@ function asEntity(value: unknown): SceneEntity {
     return value as SceneEntity
 }
 
+function asToken(value: unknown): EnergyToken {
+    return value as EnergyToken
+}
+
 describe("Scene", () => {
     let context: { clearRect: jest.Mock }
     let canvas: CanvasMock
@@ -147,6 +161,25 @@ describe("Scene", () => {
                 whenReady: jest.fn((): Promise<void> => Promise.resolve()),
             }),
         )
+        EnergyTokenMock.mockImplementation(
+            (props: Partial<EnergyTokenProps> = {}) => ({
+                x: props.x,
+                y: props.y,
+                width: ENERGY_TOKEN.SIZE,
+                height: ENERGY_TOKEN.SIZE,
+                speedX: props.speedX ?? ENERGY_TOKEN.SPEED,
+                update: jest.fn(),
+                move: jest.fn(function move(this: { x: number; speedX: number }): void {
+                    this.x += this.speedX
+                }),
+                isOffScreen: jest.fn(function isOffScreen(this: {
+                    x: number
+                    width: number
+                }): boolean {
+                    return this.x + this.width <= 0
+                }),
+            }),
+        )
         Background.mockImplementation((): { update: jest.Mock } => ({
             update: jest.fn(),
         }))
@@ -161,6 +194,7 @@ describe("Scene", () => {
 
         Sound.mockClear()
         SceneEntityMock.mockClear()
+        EnergyTokenMock.mockClear()
         Background.mockClear()
         ScoreHud.mockClear()
         GameControls.mockClear()
@@ -230,6 +264,9 @@ describe("Scene", () => {
             expect(scene.topScores).toEqual([12.5, 8, 3])
             expect(scene.scoreSeconds).toBe(0)
             expect(scene.obstacles).toEqual([])
+            expect(scene.tokens).toEqual([])
+            expect(scene.tokensCollected).toBe(0)
+            expect(scene.pendingEnergyToken).toBe(false)
             expect(scene.status).toBe(GAME_STATUS.IDLE)
             expect(scene.musicStarted).toBe(false)
         })
@@ -436,6 +473,9 @@ describe("Scene", () => {
             scene.frameNo = 40
             scene.scoreSeconds = 8
             scene.obstacles = [asEntity({})]
+            scene.tokens = [asToken({})]
+            scene.tokensCollected = 3
+            scene.pendingEnergyToken = true
             scene.character.x = 90
             scene.character.y = 12
             scene.character.speedX = 4
@@ -451,6 +491,9 @@ describe("Scene", () => {
             expect(scene.frameNo).toBe(0)
             expect(scene.scoreSeconds).toBe(0)
             expect(scene.obstacles).toEqual([])
+            expect(scene.tokens).toEqual([])
+            expect(scene.tokensCollected).toBe(0)
+            expect(scene.pendingEnergyToken).toBe(false)
             expect(scene.character.x).toBe(CHARACTER_START_X)
             expect(scene.character.y).toBe(CANVAS.height / 2)
             expect(scene.character.speedX).toBe(0)
@@ -673,6 +716,121 @@ describe("Scene", () => {
 
             expect(scene.obstacles).toEqual([])
         })
+
+        it("does not spawn a token when only one building exists", () => {
+            const random = jest.spyOn(Math, "random").mockReturnValue(0)
+            const scene = new Scene()
+            scene.frameNo = 1
+
+            scene.generateNewObstacles()
+
+            expect(scene.tokens).toEqual([])
+            expect(scene.pendingEnergyToken).toBe(false)
+            random.mockRestore()
+        })
+
+        it("queues a token when a second building appears", () => {
+            const random = jest.spyOn(Math, "random").mockReturnValue(0)
+            const scene = new Scene()
+            scene.obstacles = [
+                asEntity({ x: 800, width: 60, type: ENTITY_TYPE.BUILDING }),
+                asEntity({
+                    x: CANVAS.width,
+                    width: 60,
+                    type: ENTITY_TYPE.BUILDING,
+                }),
+            ]
+
+            scene.queueEnergyToken()
+
+            expect(scene.pendingEnergyToken).toBe(true)
+            expect(scene.tokens).toEqual([])
+            random.mockRestore()
+        })
+
+        it("does not spawn while a building occupies the right-edge lane", () => {
+            const scene = new Scene()
+            scene.pendingEnergyToken = true
+            scene.obstacles = [
+                asEntity({ x: 700, width: 60, type: ENTITY_TYPE.BUILDING }),
+                asEntity({
+                    x: CANVAS.width - 60,
+                    width: 60,
+                    type: ENTITY_TYPE.BUILDING,
+                }),
+            ]
+
+            scene.maybeSpawnEnergyToken()
+
+            expect(scene.tokens).toEqual([])
+            expect(scene.pendingEnergyToken).toBe(true)
+        })
+
+        it("spawns an energy token from the right edge once the street is clear", () => {
+            const random = jest.spyOn(Math, "random").mockReturnValue(0)
+            const scene = new Scene()
+            scene.pendingEnergyToken = true
+            scene.obstacles = [
+                asEntity({ x: 700, width: 60, type: ENTITY_TYPE.BUILDING }),
+                asEntity({
+                    x: CANVAS.width - ENERGY_TOKEN.SIZE - 60,
+                    width: 60,
+                    type: ENTITY_TYPE.BUILDING,
+                }),
+            ]
+
+            scene.maybeSpawnEnergyToken()
+
+            expect(scene.tokens).toHaveLength(1)
+            expect(scene.pendingEnergyToken).toBe(false)
+            expect(EnergyTokenMock).toHaveBeenCalledWith({
+                x: CANVAS.width,
+                y: ENERGY_TOKEN.Y_MIN,
+            })
+            random.mockRestore()
+        })
+
+        it("does not queue a token when the gap chance fails", () => {
+            const random = jest.spyOn(Math, "random").mockReturnValue(0.99)
+            const scene = new Scene()
+            scene.obstacles = [
+                asEntity({ x: 800, width: 60, type: ENTITY_TYPE.BUILDING }),
+                asEntity({
+                    x: CANVAS.width,
+                    width: 60,
+                    type: ENTITY_TYPE.BUILDING,
+                }),
+            ]
+
+            scene.queueEnergyToken()
+
+            expect(scene.pendingEnergyToken).toBe(false)
+            expect(scene.tokens).toEqual([])
+            random.mockRestore()
+        })
+
+        it("does not queue more tokens than the on-screen cap", () => {
+            const random = jest.spyOn(Math, "random").mockReturnValue(0)
+            const scene = new Scene()
+            scene.tokens = [
+                asToken({}),
+                asToken({}),
+            ]
+            scene.obstacles = [
+                asEntity({ x: 800, width: 60, type: ENTITY_TYPE.BUILDING }),
+                asEntity({
+                    x: CANVAS.width,
+                    width: 60,
+                    type: ENTITY_TYPE.BUILDING,
+                }),
+            ]
+
+            scene.queueEnergyToken()
+
+            expect(scene.pendingEnergyToken).toBe(false)
+            expect(scene.tokens).toHaveLength(ENERGY_TOKEN.MAX_ON_SCREEN)
+            random.mockRestore()
+        })
     })
 
     describe("updateObstaclesPosition", () => {
@@ -688,6 +846,66 @@ describe("Scene", () => {
             expect(scene.obstacles).toEqual([kept])
             expect(kept.update).not.toHaveBeenCalled()
             expect(dropped.update).not.toHaveBeenCalled()
+        })
+    })
+
+    describe("handleTokenCollection", () => {
+        it("removes a touched token and increments the collected count", () => {
+            const scene = new Scene()
+            const token = asToken({})
+            scene.tokens = [token]
+            asMock(scene.character.crashWith).mockReturnValue(true)
+
+            scene.handleTokenCollection()
+
+            expect(scene.tokens).toEqual([])
+            expect(scene.tokensCollected).toBe(1)
+        })
+
+        it("keeps tokens that the character has not touched", () => {
+            const scene = new Scene()
+            const token = asToken({})
+            scene.tokens = [token]
+            asMock(scene.character.crashWith).mockReturnValue(false)
+
+            scene.handleTokenCollection()
+
+            expect(scene.tokens).toEqual([token])
+            expect(scene.tokensCollected).toBe(0)
+        })
+    })
+
+    describe("updateTokensPosition", () => {
+        it("moves tokens and drops those off screen", () => {
+            const scene = new Scene()
+            const kept = {
+                x: 10,
+                speedX: -2,
+                width: 50,
+                move(): void {
+                    this.x += this.speedX
+                },
+                isOffScreen(): boolean {
+                    return this.x + this.width <= 0
+                },
+            }
+            const dropped = {
+                x: -60,
+                speedX: -2,
+                width: 50,
+                move(): void {
+                    this.x += this.speedX
+                },
+                isOffScreen(): boolean {
+                    return this.x + this.width <= 0
+                },
+            }
+            scene.tokens = [asToken(kept), asToken(dropped)]
+
+            scene.updateTokensPosition()
+
+            expect(kept.x).toBe(8)
+            expect(scene.tokens).toEqual([kept])
         })
     })
 
@@ -874,6 +1092,11 @@ describe("Scene", () => {
                     order.push("collision")
                 },
             )
+            jest.spyOn(scene, "handleTokenCollection").mockImplementation(
+                (): void => {
+                    order.push("collect")
+                },
+            )
             jest.spyOn(scene, "clear").mockImplementation((): void => {
                 order.push("clear")
             })
@@ -885,6 +1108,16 @@ describe("Scene", () => {
             jest.spyOn(scene, "updateObstaclesPosition").mockImplementation(
                 (): void => {
                     order.push("obstacles")
+                },
+            )
+            jest.spyOn(scene, "maybeSpawnEnergyToken").mockImplementation(
+                (): void => {
+                    order.push("spawnToken")
+                },
+            )
+            jest.spyOn(scene, "updateTokensPosition").mockImplementation(
+                (): void => {
+                    order.push("tokens")
                 },
             )
             jest.spyOn(scene, "moveCharacter").mockImplementation((): void => {
@@ -910,8 +1143,11 @@ describe("Scene", () => {
 
             expect(order).toEqual([
                 "collision",
+                "collect",
                 "generate",
                 "obstacles",
+                "spawnToken",
+                "tokens",
                 "newPos",
                 "move",
                 "clear",
