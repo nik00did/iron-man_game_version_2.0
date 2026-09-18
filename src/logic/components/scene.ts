@@ -11,23 +11,22 @@ import {
     GAME_STATUS,
     GAME_KEYS,
     GAME_CONTROLS,
-} from "../../constants.js"
-import type { GameStatus } from "../../constants.js"
-import type { Box } from "./sceneEntity.js"
-import { Character } from "./character.js"
-import { Obstacle } from "./obstacle.js"
-import { EnergyToken } from "./energyToken.js"
-import { Background } from "./background.js"
-import { Sound } from "./sound.js"
-import { ScoreHud } from "./scoreHud.js"
-import { GameControls } from "./gameControls.js"
-import { getTopScores, saveScore } from "./records.js"
-import { randomInt } from "../../utils.js"
-import {
+} from "../../constants.ts"
+import type { GameStatus } from "../../constants.ts"
+import type { Box } from "./sceneEntity.ts"
+import Character, {
     clampPlayerX,
     clampPlayerY,
     resolveCharacterMotion,
-} from "./characterMotion.js"
+} from "./character"
+import { Obstacle } from "./obstacle.ts"
+import { EnergyToken } from "./energyToken.ts"
+import Background from "./background"
+import { Sound } from "./sound.ts"
+import ScoreHud, { getTopScores, saveScore } from "./scoreHud"
+import { GameControls } from "./gameControls.ts"
+import Shooting from "./shooting"
+import { randomInt } from "../../utils.ts"
 
 const ARROW_KEYS = new Set<string>(Object.values(KEYS))
 const CHARACTER_SIZE = 50
@@ -56,6 +55,7 @@ export class Scene {
     collisionSound: Sound
     character: Character
     background: Background
+    shooting: Shooting
 
     constructor() {
         this.canvas = document.createElement("canvas")
@@ -103,6 +103,7 @@ export class Scene {
             y: CANVAS.height / 2,
         })
         this.background = new Background()
+        this.shooting = new Shooting()
     }
 
     mount(): void {
@@ -157,6 +158,15 @@ export class Scene {
             return
         }
 
+        if (this.isShootKey(e)) {
+            e.preventDefault()
+
+            if (this.status === GAME_STATUS.PLAYING && !e.repeat)
+                this.shooting.fire(this.character)
+
+            return
+        }
+
         if (this.isPauseKey(e.key)) {
             if (this.status === GAME_STATUS.PLAYING) {
                 e.preventDefault()
@@ -166,6 +176,10 @@ export class Scene {
                 this.resume()
             }
         }
+    }
+
+    isShootKey(e: KeyboardEvent): boolean {
+        return e.code === "Space" || e.key === GAME_KEYS.SHOOT
     }
 
     isPauseKey(key: string): boolean {
@@ -286,6 +300,7 @@ export class Scene {
         this.tokens = []
         this.tokensCollected = 0
         this.pendingEnergyToken = false
+        this.shooting.clear()
         this.key = {}
         this.character.x = CHARACTER_START_X
         this.character.y = CANVAS.height / 2
@@ -442,6 +457,7 @@ export class Scene {
 
         for (const token of this.tokens) {
             if (this.character.crashWith(token)) {
+                this.shooting.addAmmo()
                 this.tokensCollected += 1
                 continue
             }
@@ -500,10 +516,23 @@ export class Scene {
             token.update(this.context)
 
         this.character.update(this.context)
-        this.scoreHud.draw(this.context, this.score, this.topScores)
+        this.shooting.draw(this.context)
+        this.scoreHud.draw(
+            this.context,
+            this.score,
+            this.topScores,
+            this.shooting.ammo,
+        )
+    }
+
+    updateShooting(): void {
+        this.shooting.move()
+        this.shooting.removeOffScreen(this.canvas)
+        this.obstacles = this.shooting.hitObstacles(this.obstacles)
     }
 
     update(): void {
+        this.updateShooting()
         this.handleObstacleCollision()
         this.handleTokenCollection()
 

@@ -1,4 +1,4 @@
-import { SCORE_HUD } from "../../constants.js"
+import { SCORE_HUD } from "../../../constants.ts"
 
 function toScore(value: unknown): number | null {
     if (typeof value !== "number" || !Number.isFinite(value))

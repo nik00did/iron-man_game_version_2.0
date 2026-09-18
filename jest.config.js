@@ -11,9 +11,9 @@ export default {
         ],
     },
     moduleNameMapper: {
-        "^@src/(.*)\\.js$": "<rootDir>/src/$1.ts",
+        "^@src/(.*)\\.ts$": "<rootDir>/src/$1.ts",
         "^@src/(.*)$": "<rootDir>/src/$1",
-        "^(\\.{1,2}/.*)\\.js$": "$1",
+        "^(\\.{1,2}/.*)\\.ts$": "$1.ts",
     },
     testMatch: ["<rootDir>/tests/**/*.test.ts"],
     setupFiles: ["<rootDir>/jest.globals.js"],

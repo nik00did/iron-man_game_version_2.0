@@ -15,15 +15,22 @@ import {
     ENERGY_TOKEN,
     SOUNDS,
     TICK_MS,
-} from "@src/constants.js"
-import type { Obstacle } from "@src/logic/components/obstacle.js"
-import type { ObstacleProps } from "@src/logic/components/obstacle.js"
-import type { CharacterProps } from "@src/logic/components/character.js"
-import type { EnergyToken } from "@src/logic/components/energyToken.js"
-import type { EnergyTokenProps } from "@src/logic/components/energyToken.js"
-import type { CharacterAppearance } from "@src/logic/components/characterMotion.js"
+} from "@src/constants.ts"
+import type { Obstacle } from "@src/logic/components/obstacle.ts"
+import type { ObstacleProps } from "@src/logic/components/obstacle.ts"
+import type {
+    CharacterAppearance,
+    CharacterProps,
+} from "@src/logic/components/character"
+import type { EnergyToken } from "@src/logic/components/energyToken.ts"
+import type { EnergyTokenProps } from "@src/logic/components/energyToken.ts"
 
-type KeyEvent = { key: string; preventDefault?: () => void }
+type KeyEvent = {
+    key: string
+    code?: string
+    repeat?: boolean
+    preventDefault?: () => void
+}
 
 type CanvasMock = {
     width: number
@@ -42,64 +49,80 @@ const ObstacleMock = jest.fn()
 const EnergyTokenMock = jest.fn()
 const Background = jest.fn()
 const ScoreHud = jest.fn()
+const Shooting = jest.fn()
 const GameControls = jest.fn()
 const getTopScores = jest.fn()
 const saveScore = jest.fn()
 
 jest.unstable_mockModule(
-    "@src/logic/components/sound.js",
+    "@src/logic/components/sound.ts",
     (): { Sound: jest.Mock } => ({
         Sound,
     }),
 )
+
+const characterMotion = await import(
+    "@src/logic/components/character/characterMotion.ts"
+)
+
 jest.unstable_mockModule(
-    "@src/logic/components/character.js",
-    (): { Character: jest.Mock } => ({
-        Character: CharacterMock,
+    "@src/logic/components/character",
+    (): {
+        default: jest.Mock
+        clampPlayerX: typeof characterMotion.clampPlayerX
+        clampPlayerY: typeof characterMotion.clampPlayerY
+        resolveCharacterMotion: typeof characterMotion.resolveCharacterMotion
+    } => ({
+        default: CharacterMock,
+        clampPlayerX: characterMotion.clampPlayerX,
+        clampPlayerY: characterMotion.clampPlayerY,
+        resolveCharacterMotion: characterMotion.resolveCharacterMotion,
     }),
 )
 jest.unstable_mockModule(
-    "@src/logic/components/obstacle.js",
+    "@src/logic/components/obstacle.ts",
     (): { Obstacle: jest.Mock } => ({
         Obstacle: ObstacleMock,
     }),
 )
 jest.unstable_mockModule(
-    "@src/logic/components/energyToken.js",
+    "@src/logic/components/energyToken.ts",
     (): { EnergyToken: jest.Mock } => ({
         EnergyToken: EnergyTokenMock,
     }),
 )
 jest.unstable_mockModule(
-    "@src/logic/components/background.js",
-    (): { Background: jest.Mock } => ({
-        Background,
+    "@src/logic/components/background",
+    (): { default: jest.Mock } => ({
+        default: Background,
     }),
 )
 jest.unstable_mockModule(
-    "@src/logic/components/scoreHud.js",
-    (): { ScoreHud: jest.Mock } => ({
-        ScoreHud,
-    }),
-)
-jest.unstable_mockModule(
-    "@src/logic/components/gameControls.js",
-    (): { GameControls: jest.Mock } => ({
-        GameControls,
-    }),
-)
-jest.unstable_mockModule(
-    "@src/logic/components/records.js",
+    "@src/logic/components/scoreHud",
     (): {
+        default: jest.Mock
         getTopScores: jest.Mock
         saveScore: jest.Mock
     } => ({
+        default: ScoreHud,
         getTopScores,
         saveScore,
     }),
 )
+jest.unstable_mockModule(
+    "@src/logic/components/shooting",
+    (): { default: jest.Mock } => ({
+        default: Shooting,
+    }),
+)
+jest.unstable_mockModule(
+    "@src/logic/components/gameControls.ts",
+    (): { GameControls: jest.Mock } => ({
+        GameControls,
+    }),
+)
 
-const { Scene } = await import("@src/logic/components/scene.js")
+const { Scene } = await import("@src/logic/components/scene.ts")
 
 function getListener(
     mockFn: jest.Mock,
@@ -239,6 +262,31 @@ describe("Scene", () => {
         ScoreHud.mockImplementation((): { draw: jest.Mock } => ({
             draw: jest.fn(),
         }))
+        Shooting.mockImplementation(
+            (): {
+                blasts: unknown[]
+                ammo: number
+                addAmmo: jest.Mock
+                fire: jest.Mock
+                move: jest.Mock
+                removeOffScreen: jest.Mock
+                hitObstacles: jest.Mock
+                draw: jest.Mock
+                clear: jest.Mock
+            } => ({
+                blasts: [],
+                ammo: 0,
+                addAmmo: jest.fn((): boolean => true),
+                fire: jest.fn(),
+                move: jest.fn(),
+                removeOffScreen: jest.fn(),
+                hitObstacles: jest.fn(
+                    (obstacles: unknown[]): unknown[] => obstacles,
+                ),
+                draw: jest.fn(),
+                clear: jest.fn(),
+            }),
+        )
         GameControls.mockImplementation(() => controls)
         getTopScores.mockReset()
         saveScore.mockReset()
@@ -251,6 +299,7 @@ describe("Scene", () => {
         EnergyTokenMock.mockClear()
         Background.mockClear()
         ScoreHud.mockClear()
+        Shooting.mockClear()
         GameControls.mockClear()
         controls.sync.mockClear()
 
@@ -313,12 +362,14 @@ describe("Scene", () => {
             })
             expect(Background).toHaveBeenCalledTimes(1)
             expect(ScoreHud).toHaveBeenCalledTimes(1)
+            expect(Shooting).toHaveBeenCalledTimes(1)
             expect(getTopScores).toHaveBeenCalledTimes(1)
             expect(scene.topScores).toEqual([12, 8, 3])
             expect(scene.score).toBe(0)
             expect(scene.obstacles).toEqual([])
             expect(scene.tokens).toEqual([])
             expect(scene.tokensCollected).toBe(0)
+            expect(scene.shooting.ammo).toBe(0)
             expect(scene.pendingEnergyToken).toBe(false)
             expect(scene.status).toBe(GAME_STATUS.IDLE)
             expect(scene.musicStarted).toBe(false)
@@ -457,6 +508,62 @@ describe("Scene", () => {
         })
     })
 
+    describe("shoot", () => {
+        it("fires one blast from the character on Space while playing", () => {
+            const scene = new Scene()
+            scene.mount()
+            scene.play()
+            const preventDefault = jest.fn()
+            const keydown = getListener(
+                asMock(window.addEventListener),
+                "keydown",
+            )
+
+            keydown({
+                key: GAME_KEYS.SHOOT,
+                code: "Space",
+                preventDefault,
+            })
+
+            expect(preventDefault).toHaveBeenCalledTimes(1)
+            expect(asMock(scene.shooting.fire)).toHaveBeenCalledTimes(1)
+            expect(asMock(scene.shooting.fire)).toHaveBeenCalledWith(
+                scene.character,
+            )
+        })
+
+        it("does not fire while idle", () => {
+            const scene = new Scene()
+            scene.mount()
+            const preventDefault = jest.fn()
+            const keydown = getListener(
+                asMock(window.addEventListener),
+                "keydown",
+            )
+
+            keydown({ key: GAME_KEYS.SHOOT, preventDefault })
+
+            expect(preventDefault).toHaveBeenCalledTimes(1)
+            expect(asMock(scene.shooting.fire)).not.toHaveBeenCalled()
+        })
+
+        it("ignores key repeat so one tap is one blast", () => {
+            const scene = new Scene()
+            scene.mount()
+            scene.play()
+            const preventDefault = jest.fn()
+            const keydown = getListener(
+                asMock(window.addEventListener),
+                "keydown",
+            )
+
+            keydown({ key: GAME_KEYS.SHOOT, preventDefault })
+            keydown({ key: GAME_KEYS.SHOOT, repeat: true, preventDefault })
+
+            expect(asMock(scene.shooting.fire)).toHaveBeenCalledTimes(1)
+        })
+    })
+
     describe("pause and resume", () => {
         it("freezes the loop without stopping music", () => {
             const scene = new Scene()
@@ -547,6 +654,7 @@ describe("Scene", () => {
             expect(scene.tokens).toEqual([])
             expect(scene.tokensCollected).toBe(0)
             expect(scene.pendingEnergyToken).toBe(false)
+            expect(asMock(scene.shooting.clear)).toHaveBeenCalledTimes(1)
             expect(scene.character.x).toBe(CHARACTER_START_X)
             expect(scene.character.y).toBe(CANVAS.height / 2)
             expect(scene.character.speedX).toBe(0)
@@ -622,6 +730,7 @@ describe("Scene", () => {
             const scene = new Scene()
             scene.frameNo = 50
             scene.tokensCollected = 3
+            scene.shooting.ammo = 1
 
             expect(scene.currentScore()).toBe(1 + 3 * ENERGY_TOKEN.POINTS)
         })
@@ -745,6 +854,28 @@ describe("Scene", () => {
 
             expect(asMock(scene.character.crashWith)).toHaveBeenCalledTimes(2)
             expect(stopOnCollision).toHaveBeenCalledTimes(1)
+        })
+    })
+
+    describe("updateShooting", () => {
+        it("moves blasts, culls off-screen, then applies hits to obstacles", () => {
+            const scene = new Scene()
+            const kept = asObstacle({ type: ENTITY_TYPE.CLOUD })
+            const removed = asObstacle({ type: ENTITY_TYPE.PLANE })
+            scene.obstacles = [kept, removed]
+            asMock(scene.shooting.hitObstacles).mockReturnValue([kept])
+
+            scene.updateShooting()
+
+            expect(asMock(scene.shooting.move)).toHaveBeenCalledTimes(1)
+            expect(asMock(scene.shooting.removeOffScreen)).toHaveBeenCalledWith(
+                scene.canvas,
+            )
+            expect(asMock(scene.shooting.hitObstacles)).toHaveBeenCalledWith([
+                kept,
+                removed,
+            ])
+            expect(scene.obstacles).toEqual([kept])
         })
     })
 
@@ -950,7 +1081,7 @@ describe("Scene", () => {
     })
 
     describe("handleTokenCollection", () => {
-        it("removes a touched token and increments the collected count", () => {
+        it("removes a touched token, increments the collected count, and stores ammo", () => {
             const scene = new Scene()
             const token = asToken({})
             scene.tokens = [token]
@@ -960,6 +1091,21 @@ describe("Scene", () => {
 
             expect(scene.tokens).toEqual([])
             expect(scene.tokensCollected).toBe(1)
+            expect(asMock(scene.shooting.addAmmo)).toHaveBeenCalledTimes(1)
+        })
+
+        it("still collects a token for score when ammo is full", () => {
+            const scene = new Scene()
+            const token = asToken({})
+            scene.tokens = [token]
+            asMock(scene.character.crashWith).mockReturnValue(true)
+            asMock(scene.shooting.addAmmo).mockReturnValue(false)
+
+            scene.handleTokenCollection()
+
+            expect(scene.tokens).toEqual([])
+            expect(scene.tokensCollected).toBe(1)
+            expect(asMock(scene.shooting.addAmmo)).toHaveBeenCalledTimes(1)
         })
 
         it("keeps tokens that the character has not touched", () => {
@@ -1187,6 +1333,9 @@ describe("Scene", () => {
             jest.replaceProperty(OBSTACLES, "ENABLED", true)
             const scene = new Scene()
             const order: string[] = []
+            jest.spyOn(scene, "updateShooting").mockImplementation((): void => {
+                order.push("shooting")
+            })
             jest.spyOn(scene, "handleObstacleCollision").mockImplementation(
                 (): void => {
                     order.push("collision")
@@ -1232,6 +1381,9 @@ describe("Scene", () => {
             asMock(scene.character.update).mockImplementation((): void => {
                 order.push("char")
             })
+            asMock(scene.shooting.draw).mockImplementation((): void => {
+                order.push("blasts")
+            })
             scene.character.speedX = 4
             scene.character.speedY = -2
             scene.status = GAME_STATUS.PLAYING
@@ -1242,6 +1394,7 @@ describe("Scene", () => {
             scene.update()
 
             expect(order).toEqual([
+                "shooting",
                 "collision",
                 "collect",
                 "generate",
@@ -1253,6 +1406,7 @@ describe("Scene", () => {
                 "clear",
                 "bg",
                 "char",
+                "blasts",
                 "hud",
             ])
             expect(scene.frameNo).toBe(1)
@@ -1266,10 +1420,14 @@ describe("Scene", () => {
             expect(asMock(scene.character.update)).toHaveBeenCalledWith(
                 scene.context,
             )
+            expect(asMock(scene.shooting.draw)).toHaveBeenCalledWith(
+                scene.context,
+            )
             expect(asMock(scene.scoreHud.draw)).toHaveBeenCalledWith(
                 scene.context,
                 scene.score,
                 scene.topScores,
+                scene.shooting.ammo,
             )
         })
 

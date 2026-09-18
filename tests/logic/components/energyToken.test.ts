@@ -1,5 +1,5 @@
-import { ENERGY_TOKEN } from "@src/constants.js"
-import { EnergyToken } from "@src/logic/components/energyToken.js"
+import { ENERGY_TOKEN } from "@src/constants.ts"
+import { EnergyToken } from "@src/logic/components/energyToken.ts"
 
 describe("EnergyToken", () => {
     describe("constructor", () => {

@@ -1,5 +1,5 @@
-import { ENERGY_TOKEN } from "../../constants.js"
-import { SceneEntity } from "./sceneEntity.js"
+import { ENERGY_TOKEN } from "../../constants.ts"
+import { SceneEntity } from "./sceneEntity.ts"
 
 export type EnergyTokenProps = {
     x: number

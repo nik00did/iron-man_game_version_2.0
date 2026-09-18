@@ -1,4 +1,4 @@
-import { Scene } from "./components/scene.js"
+import { Scene } from "./components/scene.ts"
 
 export function initScene(): void {
     const scene = new Scene()

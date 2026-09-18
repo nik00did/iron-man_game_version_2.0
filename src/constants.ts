@@ -1,4 +1,4 @@
-import { randomInt } from "./utils.js"
+import { randomInt } from "./utils.ts"
 
 export type MovablePiece = {
     x: number
@@ -78,6 +78,8 @@ export const SCORE_HUD = {
     FONT: "20px sans-serif",
     FONT_SIZE: 20,
     SCORE_LABEL: "Your score",
+    BLAST_LABEL: "Blast",
+    BLAST_GAP: 16,
     SCORE_COLOR: "#000",
     RANK_COLORS: ["red", "yellow", "green"],
     SCORE_Y: 16,
@@ -140,6 +142,7 @@ export const GAME_KEYS = {
     START: "Enter",
     PAUSE: "p",
     PAUSE_ALT: "Escape",
+    SHOOT: " ",
 }
 
 export const GAME_CONTROLS = {
@@ -158,7 +161,15 @@ export const ENTITY_TYPE = {
     CHARACTER: "character",
     BUILDING: "building",
     ENERGY_TOKEN: "energy-token",
+    BLAST: "blast",
 }
+
+export const BLAST = {
+    SIZE: 10,
+    COLOR: "#ffd400",
+    SPEED: 10,
+    MAX_AMMO: 3,
+} as const
 
 export const ENERGY_TOKEN = {
     SIZE: 50,

@@ -1,7 +1,7 @@
-import { ENTITY_TYPE, ICONS } from "@src/constants.js"
-import { Character } from "@src/logic/components/character.js"
-import type { Box } from "@src/logic/components/sceneEntity.js"
-import type { CharacterProps } from "@src/logic/components/character.js"
+import { ENTITY_TYPE, ICONS } from "@src/constants.ts"
+import Character from "@src/logic/components/character"
+import type { Box } from "@src/logic/components/sceneEntity.ts"
+import type { CharacterProps } from "@src/logic/components/character"
 
 function createCharacter(overrides: Partial<CharacterProps> = {}): Character {
     return new Character({

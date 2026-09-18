@@ -1,5 +1,5 @@
-import { Obstacle } from "@src/logic/components/obstacle.js"
-import type { ObstacleProps } from "@src/logic/components/obstacle.js"
+import { Obstacle } from "@src/logic/components/obstacle.ts"
+import type { ObstacleProps } from "@src/logic/components/obstacle.ts"
 
 function createObstacle(overrides: Partial<ObstacleProps> = {}): Obstacle {
     return new Obstacle({
