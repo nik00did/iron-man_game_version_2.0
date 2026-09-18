@@ -58,4 +58,30 @@ describe("SceneEntity", () => {
             expect(entity.isOffScreen()).toBe(true)
         })
     })
+
+    describe("crashWith", () => {
+        it("returns true when boxes overlap", () => {
+            const entity = createEntity({ x: 0, y: 0 })
+
+            expect(entity.crashWith({ x: 5, y: 5, width: 10, height: 10 })).toBe(
+                true,
+            )
+        })
+
+        it("returns true when edges touch", () => {
+            const entity = createEntity({ x: 0, y: 0 })
+
+            expect(entity.crashWith({ x: 10, y: 0, width: 10, height: 10 })).toBe(
+                true,
+            )
+        })
+
+        it("returns false when the other box is fully to the right", () => {
+            const entity = createEntity({ x: 0, y: 0 })
+
+            expect(entity.crashWith({ x: 11, y: 0, width: 10, height: 10 })).toBe(
+                false,
+            )
+        })
+    })
 })

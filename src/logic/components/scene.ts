@@ -25,6 +25,7 @@ import Background from "./background"
 import { Sound } from "./sound.ts"
 import ScoreHud, { getTopScores, saveScore } from "./scoreHud"
 import { GameControls } from "./gameControls.ts"
+import Shooting from "./shooting"
 import { randomInt } from "../../utils.ts"
 
 const ARROW_KEYS = new Set<string>(Object.values(KEYS))
@@ -54,6 +55,7 @@ export class Scene {
     collisionSound: Sound
     character: Character
     background: Background
+    shooting: Shooting
 
     constructor() {
         this.canvas = document.createElement("canvas")
@@ -101,6 +103,7 @@ export class Scene {
             y: CANVAS.height / 2,
         })
         this.background = new Background()
+        this.shooting = new Shooting()
     }
 
     mount(): void {
@@ -155,6 +158,15 @@ export class Scene {
             return
         }
 
+        if (this.isShootKey(e)) {
+            e.preventDefault()
+
+            if (this.status === GAME_STATUS.PLAYING && !e.repeat)
+                this.shooting.fire(this.character)
+
+            return
+        }
+
         if (this.isPauseKey(e.key)) {
             if (this.status === GAME_STATUS.PLAYING) {
                 e.preventDefault()
@@ -164,6 +176,10 @@ export class Scene {
                 this.resume()
             }
         }
+    }
+
+    isShootKey(e: KeyboardEvent): boolean {
+        return e.code === "Space" || e.key === GAME_KEYS.SHOOT
     }
 
     isPauseKey(key: string): boolean {
@@ -284,6 +300,7 @@ export class Scene {
         this.tokens = []
         this.tokensCollected = 0
         this.pendingEnergyToken = false
+        this.shooting.clear()
         this.key = {}
         this.character.x = CHARACTER_START_X
         this.character.y = CANVAS.height / 2
@@ -498,10 +515,18 @@ export class Scene {
             token.update(this.context)
 
         this.character.update(this.context)
+        this.shooting.draw(this.context)
         this.scoreHud.draw(this.context, this.score, this.topScores)
     }
 
+    updateShooting(): void {
+        this.shooting.move()
+        this.shooting.removeOffScreen(this.canvas)
+        this.obstacles = this.shooting.hitObstacles(this.obstacles)
+    }
+
     update(): void {
+        this.updateShooting()
         this.handleObstacleCollision()
         this.handleTokenCollection()
 

@@ -1,6 +1,5 @@
 import { ENTITY_TYPE } from "../../../constants.ts"
 import { SceneEntity } from "../sceneEntity.ts"
-import type { Box } from "../sceneEntity.ts"
 import type { CharacterAppearance } from "./characterMotion.ts"
 
 export type CharacterProps = {
@@ -69,28 +68,6 @@ export class Character extends SceneEntity {
     newPos(): void {
         this.x += this.speedX
         this.y += this.speedY
-    }
-
-    crashWith(obj: Box): boolean {
-        const myleft = this.x
-        const myright = this.x + this.width
-        const mytop = this.y
-        const mybottom = this.y + this.height
-        const objleft = obj.x
-        const objright = obj.x + obj.width
-        const objtop = obj.y
-        const objbottom = obj.y + obj.height
-        let crash = true
-
-        if (
-            mybottom < objtop ||
-            mytop > objbottom ||
-            myright < objleft ||
-            myleft > objright
-        )
-            crash = false
-
-        return crash
     }
 
     applyAppearance(appearance: CharacterAppearance | null): void {

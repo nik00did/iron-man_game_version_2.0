@@ -140,6 +140,7 @@ export const GAME_KEYS = {
     START: "Enter",
     PAUSE: "p",
     PAUSE_ALT: "Escape",
+    SHOOT: " ",
 }
 
 export const GAME_CONTROLS = {
@@ -158,7 +159,14 @@ export const ENTITY_TYPE = {
     CHARACTER: "character",
     BUILDING: "building",
     ENERGY_TOKEN: "energy-token",
+    BLAST: "blast",
 }
+
+export const BLAST = {
+    SIZE: 10,
+    COLOR: "#ffd400",
+    SPEED: 10,
+} as const
 
 export const ENERGY_TOKEN = {
     SIZE: 50,
