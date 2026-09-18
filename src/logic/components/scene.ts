@@ -457,6 +457,7 @@ export class Scene {
 
         for (const token of this.tokens) {
             if (this.character.crashWith(token)) {
+                this.shooting.addAmmo()
                 this.tokensCollected += 1
                 continue
             }
@@ -516,7 +517,12 @@ export class Scene {
 
         this.character.update(this.context)
         this.shooting.draw(this.context)
-        this.scoreHud.draw(this.context, this.score, this.topScores)
+        this.scoreHud.draw(
+            this.context,
+            this.score,
+            this.topScores,
+            this.shooting.ammo,
+        )
     }
 
     updateShooting(): void {

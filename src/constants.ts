@@ -78,6 +78,8 @@ export const SCORE_HUD = {
     FONT: "20px sans-serif",
     FONT_SIZE: 20,
     SCORE_LABEL: "Your score",
+    BLAST_LABEL: "Blast",
+    BLAST_GAP: 16,
     SCORE_COLOR: "#000",
     RANK_COLORS: ["red", "yellow", "green"],
     SCORE_Y: 16,
@@ -166,6 +168,7 @@ export const BLAST = {
     SIZE: 10,
     COLOR: "#ffd400",
     SPEED: 10,
+    MAX_AMMO: 3,
 } as const
 
 export const ENERGY_TOKEN = {

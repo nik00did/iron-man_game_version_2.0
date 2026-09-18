@@ -1,4 +1,4 @@
-import { SCORE_HUD } from "@src/constants.ts"
+import { BLAST, SCORE_HUD } from "@src/constants.ts"
 import ScoreHud from "@src/logic/components/scoreHud"
 
 type HudCtx = {
@@ -6,6 +6,7 @@ type HudCtx = {
     save: jest.Mock
     restore: jest.Mock
     fillText: jest.Mock
+    measureText: jest.Mock
     font: string
     textBaseline: string
     fillStyle: string
@@ -18,6 +19,7 @@ function createCtx(): HudCtx {
         save: jest.fn(),
         restore: jest.fn(),
         fillText: jest.fn(),
+        measureText: jest.fn((text: string) => ({ width: text.length * 10 })),
         font: "",
         textBaseline: "",
         fillStyle: "",
@@ -53,6 +55,27 @@ describe("ScoreHud", () => {
             expect(ctx.fillText).toHaveBeenCalledWith(
                 "Your score: 11",
                 500,
+                SCORE_HUD.SCORE_Y,
+            )
+        })
+    })
+
+    describe("drawBlasts", () => {
+        it("draws ammo left of the centered score", () => {
+            const hud = new ScoreHud()
+            const ctx = createCtx()
+            const scoreWidth = "Your score: 11".length * 10
+            const expectedX = 500 - scoreWidth / 2 - SCORE_HUD.BLAST_GAP
+
+            hud.drawBlasts(ctx as unknown as CanvasRenderingContext2D, 11, 2)
+
+            expect(ctx.font).toBe(SCORE_HUD.FONT)
+            expect(ctx.textBaseline).toBe("top")
+            expect(ctx.fillStyle).toBe(SCORE_HUD.SCORE_COLOR)
+            expect(ctx.textAlign).toBe("right")
+            expect(ctx.fillText).toHaveBeenCalledWith(
+                `Blast: 2/${BLAST.MAX_AMMO}`,
+                expectedX,
                 SCORE_HUD.SCORE_Y,
             )
         })
@@ -102,18 +125,23 @@ describe("ScoreHud", () => {
 
     describe("draw", () => {
         let drawScore: jest.SpyInstance
+        let drawBlasts: jest.SpyInstance
         let drawRating: jest.SpyInstance
 
         afterEach(() => {
             drawScore.mockRestore()
+            drawBlasts.mockRestore()
             drawRating.mockRestore()
         })
 
-        it("saves context, draws score and rating, then restores", () => {
+        it("saves context, draws score, blasts, and rating, then restores", () => {
             const hud = new ScoreHud()
             const ctx = createCtx()
             const topScores = [10, 8]
             drawScore = jest.spyOn(hud, "drawScore").mockImplementation((): void => {})
+            drawBlasts = jest
+                .spyOn(hud, "drawBlasts")
+                .mockImplementation((): void => {})
             drawRating = jest
                 .spyOn(hud, "drawRating")
                 .mockImplementation((): void => {})
@@ -122,10 +150,12 @@ describe("ScoreHud", () => {
                 ctx as unknown as CanvasRenderingContext2D,
                 11,
                 topScores,
+                2,
             )
 
             expect(ctx.save).toHaveBeenCalledTimes(1)
             expect(drawScore).toHaveBeenCalledWith(ctx, 11)
+            expect(drawBlasts).toHaveBeenCalledWith(ctx, 11, 2)
             expect(drawRating).toHaveBeenCalledWith(ctx, topScores)
             expect(ctx.restore).toHaveBeenCalledTimes(1)
         })

@@ -17,12 +17,27 @@ function box(
 }
 
 describe("Shooting", () => {
-    describe("fire", () => {
-        it("spawns a blast at the origin center", () => {
+    describe("addAmmo", () => {
+        it("increments ammo up to the max", () => {
             const shooting = new Shooting()
 
-            shooting.fire({ x: 100, y: 50, width: 50, height: 50 })
+            expect(shooting.addAmmo()).toBe(true)
+            expect(shooting.addAmmo()).toBe(true)
+            expect(shooting.addAmmo()).toBe(true)
+            expect(shooting.addAmmo()).toBe(false)
+            expect(shooting.ammo).toBe(BLAST.MAX_AMMO)
+        })
+    })
 
+    describe("fire", () => {
+        it("spawns a blast at the origin center and spends one ammo", () => {
+            const shooting = new Shooting()
+            shooting.addAmmo()
+
+            const fired = shooting.fire({ x: 100, y: 50, width: 50, height: 50 })
+
+            expect(fired).toBe(true)
+            expect(shooting.ammo).toBe(0)
             expect(shooting.blasts).toHaveLength(1)
             expect(shooting.blasts[0]).toMatchObject({
                 x: 120,
@@ -34,20 +49,35 @@ describe("Shooting", () => {
             expect(shooting.blasts[0]).toBeInstanceOf(Blast)
         })
 
+        it("does not fire when ammo is empty", () => {
+            const shooting = new Shooting()
+
+            expect(shooting.fire({ x: 0, y: 0, width: 10, height: 10 })).toBe(
+                false,
+            )
+            expect(shooting.blasts).toHaveLength(0)
+            expect(shooting.ammo).toBe(0)
+        })
+
         it("allows more than one blast on screen", () => {
             const shooting = new Shooting()
             const origin = { x: 0, y: 0, width: 50, height: 50 }
+            shooting.addAmmo()
+            shooting.addAmmo()
 
             shooting.fire(origin)
             shooting.fire(origin)
 
             expect(shooting.blasts).toHaveLength(2)
+            expect(shooting.ammo).toBe(0)
         })
     })
 
     describe("move", () => {
         it("moves every blast to the right", () => {
             const shooting = new Shooting()
+            shooting.addAmmo()
+            shooting.addAmmo()
             shooting.fire({ x: 0, y: 0, width: 10, height: 10 })
             shooting.fire({ x: 20, y: 0, width: 10, height: 10 })
 
@@ -147,13 +177,16 @@ describe("Shooting", () => {
     })
 
     describe("clear", () => {
-        it("removes every blast", () => {
+        it("removes every blast and resets ammo", () => {
             const shooting = new Shooting()
+            shooting.addAmmo()
             shooting.fire({ x: 0, y: 0, width: 10, height: 10 })
+            shooting.addAmmo()
 
             shooting.clear()
 
             expect(shooting.blasts).toEqual([])
+            expect(shooting.ammo).toBe(0)
         })
     })
 })

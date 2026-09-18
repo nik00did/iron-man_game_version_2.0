@@ -265,6 +265,8 @@ describe("Scene", () => {
         Shooting.mockImplementation(
             (): {
                 blasts: unknown[]
+                ammo: number
+                addAmmo: jest.Mock
                 fire: jest.Mock
                 move: jest.Mock
                 removeOffScreen: jest.Mock
@@ -273,6 +275,8 @@ describe("Scene", () => {
                 clear: jest.Mock
             } => ({
                 blasts: [],
+                ammo: 0,
+                addAmmo: jest.fn((): boolean => true),
                 fire: jest.fn(),
                 move: jest.fn(),
                 removeOffScreen: jest.fn(),
@@ -365,6 +369,7 @@ describe("Scene", () => {
             expect(scene.obstacles).toEqual([])
             expect(scene.tokens).toEqual([])
             expect(scene.tokensCollected).toBe(0)
+            expect(scene.shooting.ammo).toBe(0)
             expect(scene.pendingEnergyToken).toBe(false)
             expect(scene.status).toBe(GAME_STATUS.IDLE)
             expect(scene.musicStarted).toBe(false)
@@ -725,6 +730,7 @@ describe("Scene", () => {
             const scene = new Scene()
             scene.frameNo = 50
             scene.tokensCollected = 3
+            scene.shooting.ammo = 1
 
             expect(scene.currentScore()).toBe(1 + 3 * ENERGY_TOKEN.POINTS)
         })
@@ -1075,7 +1081,7 @@ describe("Scene", () => {
     })
 
     describe("handleTokenCollection", () => {
-        it("removes a touched token and increments the collected count", () => {
+        it("removes a touched token, increments the collected count, and stores ammo", () => {
             const scene = new Scene()
             const token = asToken({})
             scene.tokens = [token]
@@ -1085,6 +1091,21 @@ describe("Scene", () => {
 
             expect(scene.tokens).toEqual([])
             expect(scene.tokensCollected).toBe(1)
+            expect(asMock(scene.shooting.addAmmo)).toHaveBeenCalledTimes(1)
+        })
+
+        it("still collects a token for score when ammo is full", () => {
+            const scene = new Scene()
+            const token = asToken({})
+            scene.tokens = [token]
+            asMock(scene.character.crashWith).mockReturnValue(true)
+            asMock(scene.shooting.addAmmo).mockReturnValue(false)
+
+            scene.handleTokenCollection()
+
+            expect(scene.tokens).toEqual([])
+            expect(scene.tokensCollected).toBe(1)
+            expect(asMock(scene.shooting.addAmmo)).toHaveBeenCalledTimes(1)
         })
 
         it("keeps tokens that the character has not touched", () => {
@@ -1406,6 +1427,7 @@ describe("Scene", () => {
                 scene.context,
                 scene.score,
                 scene.topScores,
+                scene.shooting.ammo,
             )
         })
 

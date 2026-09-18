@@ -6,12 +6,27 @@ import { Blast } from "./blast.ts"
 
 export class Shooting {
     blasts: Blast[]
+    ammo: number
 
     constructor() {
         this.blasts = []
+        this.ammo = 0
     }
 
-    fire(origin: Box): void {
+    addAmmo(): boolean {
+        if (this.ammo >= BLAST.MAX_AMMO)
+            return false
+
+        this.ammo += 1
+
+        return true
+    }
+
+    fire(origin: Box): boolean {
+        if (this.ammo <= 0)
+            return false
+
+        this.ammo -= 1
         const size = BLAST.SIZE
 
         this.blasts.push(
@@ -20,6 +35,8 @@ export class Shooting {
                 y: origin.y + origin.height / 2 - size / 2,
             }),
         )
+
+        return true
     }
 
     move(): void {
@@ -64,5 +81,6 @@ export class Shooting {
 
     clear(): void {
         this.blasts = []
+        this.ammo = 0
     }
 }

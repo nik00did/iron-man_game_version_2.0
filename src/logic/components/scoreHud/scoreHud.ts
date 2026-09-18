@@ -1,7 +1,15 @@
-import { SCORE_HUD } from "../../../constants.ts"
+import { BLAST, SCORE_HUD } from "../../../constants.ts"
 
 function formatScore(score: number): string {
     return String(Math.floor(score))
+}
+
+function scoreText(score: number): string {
+    return `${SCORE_HUD.SCORE_LABEL}: ${formatScore(score)}`
+}
+
+function blastText(ammo: number): string {
+    return `${SCORE_HUD.BLAST_LABEL}: ${ammo}/${BLAST.MAX_AMMO}`
 }
 
 export class ScoreHud {
@@ -12,8 +20,28 @@ export class ScoreHud {
         ctx.fillStyle = SCORE_HUD.SCORE_COLOR
         ctx.textAlign = "center"
         ctx.fillText(
-            `${SCORE_HUD.SCORE_LABEL}: ${formatScore(score)}`,
+            scoreText(score),
             ctx.canvas.width / 2,
+            SCORE_HUD.SCORE_Y,
+        )
+    }
+
+    drawBlasts(
+        ctx: CanvasRenderingContext2D,
+        score: number,
+        ammo: number,
+    ): void {
+        ctx.font = SCORE_HUD.FONT
+        ctx.textBaseline = "top"
+        ctx.fillStyle = SCORE_HUD.SCORE_COLOR
+        ctx.textAlign = "right"
+
+        const scoreLeft =
+            ctx.canvas.width / 2 - ctx.measureText(scoreText(score)).width / 2
+
+        ctx.fillText(
+            blastText(ammo),
+            scoreLeft - SCORE_HUD.BLAST_GAP,
             SCORE_HUD.SCORE_Y,
         )
     }
@@ -38,10 +66,12 @@ export class ScoreHud {
         ctx: CanvasRenderingContext2D,
         score: number,
         topScores: number[],
+        ammo: number,
     ): void {
         ctx.save()
 
         this.drawScore(ctx, score)
+        this.drawBlasts(ctx, score, ammo)
         this.drawRating(ctx, topScores)
 
         ctx.restore()
