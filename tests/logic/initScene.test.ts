@@ -1,11 +1,11 @@
 const mount = jest.fn()
 const Scene = jest.fn((): { mount: jest.Mock } => ({ mount }))
 
-jest.unstable_mockModule("@src/logic/components/scene.js", (): { Scene: jest.Mock } => ({
+jest.unstable_mockModule("@src/logic/components/scene.ts", (): { Scene: jest.Mock } => ({
     Scene,
 }))
 
-const { initScene } = await import("@src/logic/initScene.js")
+const { initScene } = await import("@src/logic/initScene.ts")
 
 describe("initScene", () => {
     beforeEach(() => {

@@ -1,4 +1,4 @@
-import { randomInt } from "./utils.js"
+import { randomInt } from "./utils.ts"
 
 export type MovablePiece = {
     x: number

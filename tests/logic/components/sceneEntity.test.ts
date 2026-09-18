@@ -1,5 +1,5 @@
-import { SceneEntity } from "@src/logic/components/sceneEntity.js"
-import type { SceneEntityProps } from "@src/logic/components/sceneEntity.js"
+import { SceneEntity } from "@src/logic/components/sceneEntity.ts"
+import type { SceneEntityProps } from "@src/logic/components/sceneEntity.ts"
 
 function createEntity(
     overrides: Partial<SceneEntityProps> = {},

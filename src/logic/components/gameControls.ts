@@ -1,5 +1,5 @@
-import { GAME_CONTROLS, GAME_STATUS } from "../../constants.js"
-import type { GameStatus } from "../../constants.js"
+import { GAME_CONTROLS, GAME_STATUS } from "../../constants.ts"
+import type { GameStatus } from "../../constants.ts"
 
 export type GameControlHandlers = {
     onStart: () => void

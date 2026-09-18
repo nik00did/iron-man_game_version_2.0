@@ -15,13 +15,13 @@ import {
     ENERGY_TOKEN,
     SOUNDS,
     TICK_MS,
-} from "@src/constants.js"
-import type { Obstacle } from "@src/logic/components/obstacle.js"
-import type { ObstacleProps } from "@src/logic/components/obstacle.js"
-import type { CharacterProps } from "@src/logic/components/character.js"
-import type { EnergyToken } from "@src/logic/components/energyToken.js"
-import type { EnergyTokenProps } from "@src/logic/components/energyToken.js"
-import type { CharacterAppearance } from "@src/logic/components/characterMotion.js"
+} from "@src/constants.ts"
+import type { Obstacle } from "@src/logic/components/obstacle.ts"
+import type { ObstacleProps } from "@src/logic/components/obstacle.ts"
+import type { CharacterProps } from "@src/logic/components/character.ts"
+import type { EnergyToken } from "@src/logic/components/energyToken.ts"
+import type { EnergyTokenProps } from "@src/logic/components/energyToken.ts"
+import type { CharacterAppearance } from "@src/logic/components/characterMotion.ts"
 
 type KeyEvent = { key: string; preventDefault?: () => void }
 
@@ -47,49 +47,49 @@ const getTopScores = jest.fn()
 const saveScore = jest.fn()
 
 jest.unstable_mockModule(
-    "@src/logic/components/sound.js",
+    "@src/logic/components/sound.ts",
     (): { Sound: jest.Mock } => ({
         Sound,
     }),
 )
 jest.unstable_mockModule(
-    "@src/logic/components/character.js",
+    "@src/logic/components/character.ts",
     (): { Character: jest.Mock } => ({
         Character: CharacterMock,
     }),
 )
 jest.unstable_mockModule(
-    "@src/logic/components/obstacle.js",
+    "@src/logic/components/obstacle.ts",
     (): { Obstacle: jest.Mock } => ({
         Obstacle: ObstacleMock,
     }),
 )
 jest.unstable_mockModule(
-    "@src/logic/components/energyToken.js",
+    "@src/logic/components/energyToken.ts",
     (): { EnergyToken: jest.Mock } => ({
         EnergyToken: EnergyTokenMock,
     }),
 )
 jest.unstable_mockModule(
-    "@src/logic/components/background.js",
+    "@src/logic/components/background",
     (): { Background: jest.Mock } => ({
         Background,
     }),
 )
 jest.unstable_mockModule(
-    "@src/logic/components/scoreHud.js",
+    "@src/logic/components/scoreHud.ts",
     (): { ScoreHud: jest.Mock } => ({
         ScoreHud,
     }),
 )
 jest.unstable_mockModule(
-    "@src/logic/components/gameControls.js",
+    "@src/logic/components/gameControls.ts",
     (): { GameControls: jest.Mock } => ({
         GameControls,
     }),
 )
 jest.unstable_mockModule(
-    "@src/logic/components/records.js",
+    "@src/logic/components/records.ts",
     (): {
         getTopScores: jest.Mock
         saveScore: jest.Mock
@@ -99,7 +99,7 @@ jest.unstable_mockModule(
     }),
 )
 
-const { Scene } = await import("@src/logic/components/scene.js")
+const { Scene } = await import("@src/logic/components/scene.ts")
 
 function getListener(
     mockFn: jest.Mock,

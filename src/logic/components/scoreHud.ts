@@ -1,4 +1,4 @@
-import { SCORE_HUD } from "../../constants.js"
+import { SCORE_HUD } from "../../constants.ts"
 
 function formatScore(score: number): string {
     return String(Math.floor(score))

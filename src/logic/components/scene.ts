@@ -11,23 +11,23 @@ import {
     GAME_STATUS,
     GAME_KEYS,
     GAME_CONTROLS,
-} from "../../constants.js"
-import type { GameStatus } from "../../constants.js"
-import type { Box } from "./sceneEntity.js"
-import { Character } from "./character.js"
-import { Obstacle } from "./obstacle.js"
-import { EnergyToken } from "./energyToken.js"
-import { Background } from "./background.js"
-import { Sound } from "./sound.js"
-import { ScoreHud } from "./scoreHud.js"
-import { GameControls } from "./gameControls.js"
-import { getTopScores, saveScore } from "./records.js"
-import { randomInt } from "../../utils.js"
+} from "../../constants.ts"
+import type { GameStatus } from "../../constants.ts"
+import type { Box } from "./sceneEntity.ts"
+import { Character } from "./character.ts"
+import { Obstacle } from "./obstacle.ts"
+import { EnergyToken } from "./energyToken.ts"
+import { Background } from "./background"
+import { Sound } from "./sound.ts"
+import { ScoreHud } from "./scoreHud.ts"
+import { GameControls } from "./gameControls.ts"
+import { getTopScores, saveScore } from "./records.ts"
+import { randomInt } from "../../utils.ts"
 import {
     clampPlayerX,
     clampPlayerY,
     resolveCharacterMotion,
-} from "./characterMotion.js"
+} from "./characterMotion.ts"
 
 const ARROW_KEYS = new Set<string>(Object.values(KEYS))
 const CHARACTER_SIZE = 50

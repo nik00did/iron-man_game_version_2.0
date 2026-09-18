@@ -4,8 +4,8 @@ import {
     KEYS,
     PLAYER_IDLE_SPEED,
     PLAYER_SPEED,
-} from "../../constants.js"
-import type { CanvasSize, MovablePiece } from "../../constants.js"
+} from "../../constants.ts"
+import type { CanvasSize, MovablePiece } from "../../constants.ts"
 
 export type CharacterAppearance =
     { kind: "image"; src: string } | { kind: "fill"; color: string }

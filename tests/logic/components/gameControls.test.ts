@@ -1,5 +1,5 @@
-import { GAME_CONTROLS, GAME_STATUS } from "@src/constants.js"
-import { GameControls } from "@src/logic/components/gameControls.js"
+import { GAME_CONTROLS, GAME_STATUS } from "@src/constants.ts"
+import { GameControls } from "@src/logic/components/gameControls.ts"
 
 type ElementMock = {
     className: string

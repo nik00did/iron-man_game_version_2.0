@@ -1,7 +1,7 @@
-import { ENTITY_TYPE } from "../../constants.js"
-import { SceneEntity } from "./sceneEntity.js"
-import type { Box } from "./sceneEntity.js"
-import type { CharacterAppearance } from "./characterMotion.js"
+import { ENTITY_TYPE } from "../../constants.ts"
+import { SceneEntity } from "./sceneEntity.ts"
+import type { Box } from "./sceneEntity.ts"
+import type { CharacterAppearance } from "./characterMotion.ts"
 
 export type CharacterProps = {
     width: number

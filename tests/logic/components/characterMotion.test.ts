@@ -5,12 +5,12 @@ import {
     KEYS,
     PLAYER_IDLE_SPEED,
     PLAYER_SPEED,
-} from "@src/constants.js"
+} from "@src/constants.ts"
 import {
     clampPlayerX,
     clampPlayerY,
     resolveCharacterMotion,
-} from "@src/logic/components/characterMotion.js"
+} from "@src/logic/components/characterMotion.ts"
 
 const DIAGONAL_SPEED = PLAYER_SPEED / Math.SQRT2
 

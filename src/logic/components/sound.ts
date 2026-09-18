@@ -1,4 +1,4 @@
-import { addAudioElement } from "../../utils.js"
+import { addAudioElement } from "../../utils.ts"
 
 export class Sound {
     audio: HTMLAudioElement

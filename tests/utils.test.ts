@@ -1,4 +1,4 @@
-import { addAudioElement, randomInt } from "@src/utils.js"
+import { addAudioElement, randomInt } from "@src/utils.ts"
 
 type AudioMock = {
     src: string

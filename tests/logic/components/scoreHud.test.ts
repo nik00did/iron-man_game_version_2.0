@@ -1,5 +1,5 @@
-import { SCORE_HUD } from "@src/constants.js"
-import { ScoreHud } from "@src/logic/components/scoreHud.js"
+import { SCORE_HUD } from "@src/constants.ts"
+import { ScoreHud } from "@src/logic/components/scoreHud.ts"
 
 type HudCtx = {
     canvas: { width: number }

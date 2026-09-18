@@ -1,4 +1,4 @@
-import { SceneEntity } from "./sceneEntity.js"
+import { SceneEntity } from "./sceneEntity.ts"
 
 export type ObstacleProps = {
     width: number
