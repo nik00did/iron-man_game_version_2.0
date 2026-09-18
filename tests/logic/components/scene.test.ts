@@ -18,10 +18,12 @@ import {
 } from "@src/constants.ts"
 import type { Obstacle } from "@src/logic/components/obstacle.ts"
 import type { ObstacleProps } from "@src/logic/components/obstacle.ts"
-import type { CharacterProps } from "@src/logic/components/character.ts"
+import type {
+    CharacterAppearance,
+    CharacterProps,
+} from "@src/logic/components/character"
 import type { EnergyToken } from "@src/logic/components/energyToken.ts"
 import type { EnergyTokenProps } from "@src/logic/components/energyToken.ts"
-import type { CharacterAppearance } from "@src/logic/components/characterMotion.ts"
 
 type KeyEvent = { key: string; preventDefault?: () => void }
 
@@ -52,10 +54,23 @@ jest.unstable_mockModule(
         Sound,
     }),
 )
+
+const characterMotion = await import(
+    "@src/logic/components/character/characterMotion.ts"
+)
+
 jest.unstable_mockModule(
-    "@src/logic/components/character.ts",
-    (): { Character: jest.Mock } => ({
-        Character: CharacterMock,
+    "@src/logic/components/character",
+    (): {
+        default: jest.Mock
+        clampPlayerX: typeof characterMotion.clampPlayerX
+        clampPlayerY: typeof characterMotion.clampPlayerY
+        resolveCharacterMotion: typeof characterMotion.resolveCharacterMotion
+    } => ({
+        default: CharacterMock,
+        clampPlayerX: characterMotion.clampPlayerX,
+        clampPlayerY: characterMotion.clampPlayerY,
+        resolveCharacterMotion: characterMotion.resolveCharacterMotion,
     }),
 )
 jest.unstable_mockModule(
@@ -72,30 +87,26 @@ jest.unstable_mockModule(
 )
 jest.unstable_mockModule(
     "@src/logic/components/background",
-    (): { Background: jest.Mock } => ({
-        Background,
+    (): { default: jest.Mock } => ({
+        default: Background,
     }),
 )
 jest.unstable_mockModule(
-    "@src/logic/components/scoreHud.ts",
-    (): { ScoreHud: jest.Mock } => ({
-        ScoreHud,
+    "@src/logic/components/scoreHud",
+    (): {
+        default: jest.Mock
+        getTopScores: jest.Mock
+        saveScore: jest.Mock
+    } => ({
+        default: ScoreHud,
+        getTopScores,
+        saveScore,
     }),
 )
 jest.unstable_mockModule(
     "@src/logic/components/gameControls.ts",
     (): { GameControls: jest.Mock } => ({
         GameControls,
-    }),
-)
-jest.unstable_mockModule(
-    "@src/logic/components/records.ts",
-    (): {
-        getTopScores: jest.Mock
-        saveScore: jest.Mock
-    } => ({
-        getTopScores,
-        saveScore,
     }),
 )
 

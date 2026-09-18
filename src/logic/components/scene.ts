@@ -14,20 +14,18 @@ import {
 } from "../../constants.ts"
 import type { GameStatus } from "../../constants.ts"
 import type { Box } from "./sceneEntity.ts"
-import { Character } from "./character.ts"
-import { Obstacle } from "./obstacle.ts"
-import { EnergyToken } from "./energyToken.ts"
-import { Background } from "./background"
-import { Sound } from "./sound.ts"
-import { ScoreHud } from "./scoreHud.ts"
-import { GameControls } from "./gameControls.ts"
-import { getTopScores, saveScore } from "./records.ts"
-import { randomInt } from "../../utils.ts"
-import {
+import Character, {
     clampPlayerX,
     clampPlayerY,
     resolveCharacterMotion,
-} from "./characterMotion.ts"
+} from "./character"
+import { Obstacle } from "./obstacle.ts"
+import { EnergyToken } from "./energyToken.ts"
+import Background from "./background"
+import { Sound } from "./sound.ts"
+import ScoreHud, { getTopScores, saveScore } from "./scoreHud"
+import { GameControls } from "./gameControls.ts"
+import { randomInt } from "../../utils.ts"
 
 const ARROW_KEYS = new Set<string>(Object.values(KEYS))
 const CHARACTER_SIZE = 50

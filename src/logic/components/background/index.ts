@@ -1,2 +1,2 @@
-export { Background } from "./background.ts"
+export { Background as default } from "./background.ts"
 export { skyColorsAt } from "./sky.ts"

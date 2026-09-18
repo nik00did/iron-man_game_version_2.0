@@ -1,5 +1,5 @@
 import { CANVAS, SKY } from "@src/constants.ts"
-import { Background, skyColorsAt } from "@src/logic/components/background"
+import Background, { skyColorsAt } from "@src/logic/components/background"
 
 describe("Background", () => {
     describe("update", () => {
