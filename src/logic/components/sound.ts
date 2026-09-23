@@ -1,3 +1,4 @@
+import { isSoundEnabled } from "../../constants.ts"
 import { addAudioElement } from "../../utils.ts"
 
 export class Sound {
@@ -8,6 +9,9 @@ export class Sound {
     }
 
     play(): void {
+        if (!isSoundEnabled())
+            return
+
         const playing = this.audio.play()
 
         if (playing)

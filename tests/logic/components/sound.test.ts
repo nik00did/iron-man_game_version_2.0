@@ -5,10 +5,18 @@ type AudioMock = {
 }
 
 const addAudioElement = jest.fn()
+const isSoundEnabled = jest.fn(() => true)
 
 jest.unstable_mockModule("@src/utils.ts", (): { addAudioElement: jest.Mock } => ({
     addAudioElement,
 }))
+
+jest.unstable_mockModule(
+    "@src/constants.ts",
+    (): { isSoundEnabled: jest.Mock } => ({
+        isSoundEnabled,
+    }),
+)
 
 const { Sound } = await import("@src/logic/components/sound.ts")
 
@@ -20,6 +28,8 @@ describe("Sound", () => {
     let audio: AudioMock
 
     beforeEach(() => {
+        isSoundEnabled.mockReset()
+        isSoundEnabled.mockReturnValue(true)
         play = jest.fn()
         pause = jest.fn()
         audio = { play, pause, currentTime: 12 }
@@ -40,6 +50,15 @@ describe("Sound", () => {
         sound.play()
 
         expect(play).toHaveBeenCalledTimes(1)
+    })
+
+    it("play() does not start audio when SOUND_ENABLED is false", () => {
+        isSoundEnabled.mockReturnValue(false)
+        const sound = new Sound(SRC)
+
+        sound.play()
+
+        expect(play).not.toHaveBeenCalled()
     })
 
     it("play() attaches catch when audio.play returns a thenable", () => {
