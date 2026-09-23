@@ -60,6 +60,7 @@ export const DIAGONAL_COLORS = {
 
 export const SKY = {
     PERIOD_MS: 10_000,
+    SPEED_STEP: 1,
     STOPS: [
         { zenith: "#1e6bb8", horizon: "#7ec8e8" },
         { zenith: "#3d2b5a", horizon: "#e07a5f" },

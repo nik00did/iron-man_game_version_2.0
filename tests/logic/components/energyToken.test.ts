@@ -12,6 +12,7 @@ describe("EnergyToken", () => {
                 width: ENERGY_TOKEN.SIZE,
                 height: ENERGY_TOKEN.SIZE,
                 speedX: ENERGY_TOKEN.SPEED,
+                baseSpeedX: ENERGY_TOKEN.SPEED,
             })
         })
 

@@ -1,6 +1,6 @@
 import { SKY } from "@src/constants.ts"
 import type { SkyStop } from "@src/constants.ts"
-import { skyColorsAt } from "@src/logic/components/background"
+import { skyColorsAt, timePeriodIndex } from "@src/logic/components/background"
 
 const STOPS: readonly SkyStop[] = [
     { zenith: "#000000", horizon: "#000000" },
@@ -9,6 +9,23 @@ const STOPS: readonly SkyStop[] = [
 ]
 
 const PERIOD_MS = 1000
+
+describe("timePeriodIndex", () => {
+    it("is 0 at the start of play", () => {
+        expect(timePeriodIndex(0)).toBe(0)
+    })
+
+    it("stays on the current period until the next boundary", () => {
+        expect(timePeriodIndex(SKY.PERIOD_MS - 1)).toBe(0)
+        expect(timePeriodIndex(SKY.PERIOD_MS)).toBe(1)
+    })
+
+    it("keeps climbing after a full sky cycle", () => {
+        expect(timePeriodIndex(SKY.PERIOD_MS * SKY.STOPS.length)).toBe(
+            SKY.STOPS.length,
+        )
+    })
+})
 
 describe("skyColorsAt", () => {
     it("returns the first stop at the start of the cycle", () => {

@@ -1,5 +1,6 @@
 import {
     OBSTACLES,
+    OBSTACLE_SPAWN,
     CANVAS,
     CHARACTER_START_X,
     TICK_MS,
@@ -11,8 +12,9 @@ import {
     GAME_STATUS,
     GAME_KEYS,
     GAME_CONTROLS,
+    SKY,
 } from "../../constants.ts"
-import type { GameStatus } from "../../constants.ts"
+import type { GameStatus, ObstacleSpawn } from "../../constants.ts"
 import type { Box } from "./sceneEntity.ts"
 import Character, {
     clampPlayerX,
@@ -21,7 +23,7 @@ import Character, {
 } from "./character"
 import { Obstacle } from "./obstacle.ts"
 import { EnergyToken } from "./energyToken.ts"
-import Background from "./background"
+import Background, { timePeriodIndex } from "./background"
 import { Sound } from "./sound.ts"
 import ScoreHud, { getTopScores, saveScore } from "./scoreHud"
 import { GameControls } from "./gameControls.ts"
@@ -319,12 +321,41 @@ export class Scene {
         return this.frameNo === 1 || this.everyInterval(interval)
     }
 
+    spawnBaseSpeed(spawn: ObstacleSpawn): number {
+        if ("speedX" in spawn)
+            return Math.abs(spawn.speedX)
+
+        return (
+            (Math.abs(OBSTACLE_SPAWN.PLANE_SPEED.min) +
+                Math.abs(OBSTACLE_SPAWN.PLANE_SPEED.max)) /
+            2
+        )
+    }
+
+    obstacleSpawnInterval(spawn: ObstacleSpawn): number {
+        const baseInterval = this.character.width * spawn.intervalFactor
+        const bonus = this.scrollSpeedBonus()
+        const baseSpeed = this.spawnBaseSpeed(spawn)
+
+        if (bonus === 0 || baseSpeed === 0)
+            return Math.max(1, baseInterval)
+
+        return Math.max(
+            1,
+            Math.round((baseInterval * baseSpeed) / (baseSpeed + bonus)),
+        )
+    }
+
     elapsedMs(): number {
         return this.frameNo * TICK_MS
     }
 
     elapsedSeconds(): number {
         return this.elapsedMs() / 1000
+    }
+
+    scrollSpeedBonus(): number {
+        return timePeriodIndex(this.elapsedMs()) * SKY.SPEED_STEP
     }
 
     currentScore(): number {
@@ -357,11 +388,7 @@ export class Scene {
 
     generateNewObstacles(): void {
         for (const spawn of OBSTACLES.SPAWNS) {
-            if (
-                !this.shouldAddObstacle(
-                    this.character.width * spawn.intervalFactor,
-                )
-            )
+            if (!this.shouldAddObstacle(this.obstacleSpawnInterval(spawn)))
                 continue
 
             const height =
@@ -472,8 +499,12 @@ export class Scene {
         if (this.tokens.length === 0)
             return
 
-        for (const token of this.tokens)
+        const bonus = this.scrollSpeedBonus()
+
+        for (const token of this.tokens) {
+            token.applySpeedBonus(bonus)
             token.move()
+        }
 
         this.tokens = this.tokens.filter(
             (token): boolean => !token.isOffScreen(),
@@ -484,8 +515,12 @@ export class Scene {
         if (this.obstacles.length === 0) 
             return
 
-        for (const obstacle of this.obstacles)
+        const bonus = this.scrollSpeedBonus()
+
+        for (const obstacle of this.obstacles) {
+            obstacle.applySpeedBonus(bonus)
             obstacle.move()
+        }
 
         this.obstacles = this.obstacles.filter(
             (obstacle): boolean => !obstacle.isOffScreen(),

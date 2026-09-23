@@ -19,6 +19,7 @@ export class SceneEntity {
     width: number
     height: number
     speedX: number
+    baseSpeedX: number
 
     constructor({ x, y, width, height, speedX = 0 }: SceneEntityProps) {
         this.x = x
@@ -26,6 +27,11 @@ export class SceneEntity {
         this.width = width
         this.height = height
         this.speedX = speedX
+        this.baseSpeedX = speedX
+    }
+
+    applySpeedBonus(bonus: number): void {
+        this.speedX = this.baseSpeedX - bonus
     }
 
     move(): void {
