@@ -24,13 +24,15 @@ describe("SceneEntity", () => {
                 width: 50,
                 height: 40,
                 speedX: 0,
+                baseSpeedX: 0,
             })
         })
 
-        it("uses the given speedX", () => {
+        it("uses the given speedX as the base speed", () => {
             const entity = createEntity({ speedX: -4 })
 
             expect(entity.speedX).toBe(-4)
+            expect(entity.baseSpeedX).toBe(-4)
         })
     })
 
@@ -42,6 +44,17 @@ describe("SceneEntity", () => {
 
             expect(entity.x).toBe(7)
             expect(entity.y).toBe(20)
+        })
+    })
+
+    describe("applySpeedBonus", () => {
+        it("adds leftward speed without changing the base", () => {
+            const entity = createEntity({ speedX: -3 })
+
+            entity.applySpeedBonus(2)
+
+            expect(entity.speedX).toBe(-5)
+            expect(entity.baseSpeedX).toBe(-3)
         })
     })
 

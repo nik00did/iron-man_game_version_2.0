@@ -46,6 +46,7 @@ describe("Obstacle", () => {
                 y: 20,
                 type: "cloud",
                 speedX: -3,
+                baseSpeedX: -3,
             })
             expect(obstacle.image.src).toBe("cloud.svg")
         })
@@ -54,6 +55,7 @@ describe("Obstacle", () => {
             const obstacle = createObstacle()
 
             expect(obstacle.speedX).toBe(0)
+            expect(obstacle.baseSpeedX).toBe(0)
         })
     })
 

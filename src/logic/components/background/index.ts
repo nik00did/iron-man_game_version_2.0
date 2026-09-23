@@ -1,2 +1,2 @@
 export { Background as default } from "./background.ts"
-export { skyColorsAt } from "./sky.ts"
+export { skyColorsAt, timePeriodIndex } from "./sky.ts"

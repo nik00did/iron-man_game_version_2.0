@@ -38,6 +38,16 @@ function lerpHex(from: string, to: string, t: number): string {
     })
 }
 
+export function timePeriodIndex(
+    elapsedMs: number,
+    periodMs: number = SKY.PERIOD_MS,
+): number {
+    if (elapsedMs <= 0 || periodMs <= 0)
+        return 0
+
+    return Math.floor(elapsedMs / periodMs)
+}
+
 export function skyColorsAt(
     elapsedMs: number,
     stops: readonly SkyStop[] = SKY.STOPS,
@@ -46,7 +56,7 @@ export function skyColorsAt(
     const count = stops.length
     const cycleMs = periodMs * count
     const elapsed = ((elapsedMs % cycleMs) + cycleMs) % cycleMs
-    const index = Math.min(Math.floor(elapsed / periodMs), count - 1)
+    const index = Math.min(timePeriodIndex(elapsed, periodMs), count - 1)
     const frac = (elapsed - index * periodMs) / periodMs
     const from = stops[index]
     const to = stops[(index + 1) % count]

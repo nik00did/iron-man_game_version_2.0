@@ -15,6 +15,7 @@ import {
     ENERGY_TOKEN,
     SOUNDS,
     TICK_MS,
+    SKY,
 } from "@src/constants.ts"
 import type { Obstacle } from "@src/logic/components/obstacle.ts"
 import type { ObstacleProps } from "@src/logic/components/obstacle.ts"
@@ -91,10 +92,16 @@ jest.unstable_mockModule(
         EnergyToken: EnergyTokenMock,
     }),
 )
+const sky = await import("@src/logic/components/background/sky.ts")
+
 jest.unstable_mockModule(
     "@src/logic/components/background",
-    (): { default: jest.Mock } => ({
+    (): {
+        default: jest.Mock
+        timePeriodIndex: typeof sky.timePeriodIndex
+    } => ({
         default: Background,
+        timePeriodIndex: sky.timePeriodIndex,
     }),
 )
 jest.unstable_mockModule(
@@ -213,48 +220,73 @@ describe("Scene", () => {
             }),
         )
         ObstacleMock.mockImplementation(
-            (props: Partial<ObstacleProps> = {}) => ({
-                width: props.width,
-                height: props.height,
-                color: props.color,
-                x: props.x,
-                y: props.y,
-                type: props.type,
-                speedX: props.speedX ?? 0,
-                image: { src: props.color ?? "" },
-                update: jest.fn(),
-                move: jest.fn(function move(this: {
-                    x: number
-                    speedX: number
-                }): void {
-                    this.x += this.speedX
-                }),
-                isOffScreen: jest.fn(function isOffScreen(this: {
-                    x: number
-                    width: number
-                }): boolean {
-                    return this.x + this.width <= 0
-                }),
-            }),
+            (props: Partial<ObstacleProps> = {}) => {
+                const speedX = props.speedX ?? 0
+
+                return {
+                    width: props.width,
+                    height: props.height,
+                    color: props.color,
+                    x: props.x,
+                    y: props.y,
+                    type: props.type,
+                    speedX,
+                    baseSpeedX: speedX,
+                    image: { src: props.color ?? "" },
+                    update: jest.fn(),
+                    applySpeedBonus: jest.fn(function applySpeedBonus(
+                        this: { speedX: number; baseSpeedX: number },
+                        bonus: number,
+                    ): void {
+                        this.speedX = this.baseSpeedX - bonus
+                    }),
+                    move: jest.fn(function move(this: {
+                        x: number
+                        speedX: number
+                    }): void {
+                        this.x += this.speedX
+                    }),
+                    isOffScreen: jest.fn(function isOffScreen(this: {
+                        x: number
+                        width: number
+                    }): boolean {
+                        return this.x + this.width <= 0
+                    }),
+                }
+            },
         )
         EnergyTokenMock.mockImplementation(
-            (props: Partial<EnergyTokenProps> = {}) => ({
-                x: props.x,
-                y: props.y,
-                width: ENERGY_TOKEN.SIZE,
-                height: ENERGY_TOKEN.SIZE,
-                speedX: props.speedX ?? ENERGY_TOKEN.SPEED,
-                update: jest.fn(),
-                move: jest.fn(function move(this: { x: number; speedX: number }): void {
-                    this.x += this.speedX
-                }),
-                isOffScreen: jest.fn(function isOffScreen(this: {
-                    x: number
-                    width: number
-                }): boolean {
-                    return this.x + this.width <= 0
-                }),
-            }),
+            (props: Partial<EnergyTokenProps> = {}) => {
+                const speedX = props.speedX ?? ENERGY_TOKEN.SPEED
+
+                return {
+                    x: props.x,
+                    y: props.y,
+                    width: ENERGY_TOKEN.SIZE,
+                    height: ENERGY_TOKEN.SIZE,
+                    speedX,
+                    baseSpeedX: speedX,
+                    update: jest.fn(),
+                    applySpeedBonus: jest.fn(function applySpeedBonus(
+                        this: { speedX: number; baseSpeedX: number },
+                        bonus: number,
+                    ): void {
+                        this.speedX = this.baseSpeedX - bonus
+                    }),
+                    move: jest.fn(function move(this: {
+                        x: number
+                        speedX: number
+                    }): void {
+                        this.x += this.speedX
+                    }),
+                    isOffScreen: jest.fn(function isOffScreen(this: {
+                        x: number
+                        width: number
+                    }): boolean {
+                        return this.x + this.width <= 0
+                    }),
+                }
+            },
         )
         Background.mockImplementation((): { update: jest.Mock } => ({
             update: jest.fn(),
@@ -825,6 +857,25 @@ describe("Scene", () => {
         })
     })
 
+    describe("obstacleSpawnInterval", () => {
+        it("uses the base interval at the start of play", () => {
+            const scene = new Scene()
+
+            expect(scene.obstacleSpawnInterval(OBSTACLES.SPAWNS[0])).toBe(250)
+            expect(scene.obstacleSpawnInterval(OBSTACLES.SPAWNS[1])).toBe(650)
+            expect(scene.obstacleSpawnInterval(OBSTACLES.SPAWNS[2])).toBe(100)
+        })
+
+        it("shortens the interval as scroll speed increases", () => {
+            const scene = new Scene()
+            scene.frameNo = SKY.PERIOD_MS / TICK_MS
+
+            expect(scene.obstacleSpawnInterval(OBSTACLES.SPAWNS[0])).toBe(188)
+            expect(scene.obstacleSpawnInterval(OBSTACLES.SPAWNS[1])).toBe(532)
+            expect(scene.obstacleSpawnInterval(OBSTACLES.SPAWNS[2])).toBe(67)
+        })
+    })
+
     describe("handleObstacleCollision", () => {
         it("does not stop when no obstacle crashes", () => {
             const scene = new Scene()
@@ -1052,7 +1103,11 @@ describe("Scene", () => {
             const kept = {
                 x: 10,
                 speedX: -3,
+                baseSpeedX: -3,
                 width: 5,
+                applySpeedBonus(bonus: number): void {
+                    this.speedX = this.baseSpeedX - bonus
+                },
                 move(): void {
                     this.x += this.speedX
                 },
@@ -1063,7 +1118,11 @@ describe("Scene", () => {
             const dropped = {
                 x: -10,
                 speedX: -3,
+                baseSpeedX: -3,
                 width: 5,
+                applySpeedBonus(bonus: number): void {
+                    this.speedX = this.baseSpeedX - bonus
+                },
                 move(): void {
                     this.x += this.speedX
                 },
@@ -1077,6 +1136,32 @@ describe("Scene", () => {
 
             expect(kept.x).toBe(7)
             expect(scene.obstacles).toEqual([kept])
+        })
+
+        it("speeds up on-screen obstacles when a sky period elapses", () => {
+            const scene = new Scene()
+            scene.frameNo = SKY.PERIOD_MS / TICK_MS
+            const obstacle = {
+                x: 10,
+                speedX: -3,
+                baseSpeedX: -3,
+                width: 5,
+                applySpeedBonus(bonus: number): void {
+                    this.speedX = this.baseSpeedX - bonus
+                },
+                move(): void {
+                    this.x += this.speedX
+                },
+                isOffScreen(): boolean {
+                    return false
+                },
+            }
+            scene.obstacles = [asObstacle(obstacle)]
+
+            scene.updateObstaclesPosition()
+
+            expect(obstacle.speedX).toBe(-3 - SKY.SPEED_STEP)
+            expect(obstacle.x).toBe(6)
         })
     })
 
@@ -1127,7 +1212,11 @@ describe("Scene", () => {
             const kept = {
                 x: 10,
                 speedX: -2,
+                baseSpeedX: -2,
                 width: 50,
+                applySpeedBonus(bonus: number): void {
+                    this.speedX = this.baseSpeedX - bonus
+                },
                 move(): void {
                     this.x += this.speedX
                 },
@@ -1138,7 +1227,11 @@ describe("Scene", () => {
             const dropped = {
                 x: -60,
                 speedX: -2,
+                baseSpeedX: -2,
                 width: 50,
+                applySpeedBonus(bonus: number): void {
+                    this.speedX = this.baseSpeedX - bonus
+                },
                 move(): void {
                     this.x += this.speedX
                 },
@@ -1152,6 +1245,40 @@ describe("Scene", () => {
 
             expect(kept.x).toBe(8)
             expect(scene.tokens).toEqual([kept])
+        })
+
+        it("speeds up on-screen tokens when a sky period elapses", () => {
+            const scene = new Scene()
+            scene.frameNo = SKY.PERIOD_MS / TICK_MS
+            const token: {
+                x: number
+                speedX: number
+                baseSpeedX: number
+                width: number
+                applySpeedBonus(bonus: number): void
+                move(): void
+                isOffScreen(): boolean
+            } = {
+                x: 10,
+                speedX: ENERGY_TOKEN.SPEED,
+                baseSpeedX: ENERGY_TOKEN.SPEED,
+                width: ENERGY_TOKEN.SIZE,
+                applySpeedBonus(bonus: number): void {
+                    this.speedX = this.baseSpeedX - bonus
+                },
+                move(): void {
+                    this.x += this.speedX
+                },
+                isOffScreen(): boolean {
+                    return false
+                },
+            }
+            scene.tokens = [asToken(token)]
+
+            scene.updateTokensPosition()
+
+            expect(token.speedX).toBe(ENERGY_TOKEN.SPEED - SKY.SPEED_STEP)
+            expect(token.x).toBe(10 + ENERGY_TOKEN.SPEED - SKY.SPEED_STEP)
         })
     })
 
