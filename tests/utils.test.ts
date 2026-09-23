@@ -1,4 +1,4 @@
-import { addAudioElement, randomInt } from "@src/utils.ts"
+import { addAudioElement, assetBase, publicAsset, randomInt } from "@src/utils.ts"
 
 type AudioMock = {
     src: string
@@ -42,6 +42,23 @@ describe("addAudioElement", () => {
         expect(audio.style.display).toBe("none")
         expect(appendChild).toHaveBeenCalledWith(audio)
         expect(result).toBe(audio)
+    })
+})
+
+describe("assetBase", () => {
+    it("falls back to / when import.meta.env.BASE_URL is missing", () => {
+        expect(assetBase()).toBe("/")
+    })
+})
+
+describe("publicAsset", () => {
+    it("prefixes the path with the asset base", () => {
+        expect(publicAsset("assets/icons")).toBe("/assets/icons")
+        expect(publicAsset("assets/sounds")).toBe("/assets/sounds")
+    })
+
+    it("strips a leading slash from the path", () => {
+        expect(publicAsset("/assets/icons")).toBe("/assets/icons")
     })
 })
 
