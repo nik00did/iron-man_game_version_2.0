@@ -120,6 +120,12 @@ export const ICONS = {
     ...IRON_MAN_ICONS,
 }
 
+export const SOUND_ENABLED = false
+
+export function isSoundEnabled(): boolean {
+    return SOUND_ENABLED
+}
+
 export const SOUNDS = {
     FIRST_FIGHT: `${BASIC_SOUND_PATH}/First fight.mp3`,
     LOVE_ME_AGAIN: `${BASIC_SOUND_PATH}/love me again.mp3`,
