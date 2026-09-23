@@ -1,4 +1,4 @@
-import { randomInt } from "./utils.ts"
+import { publicAsset, randomInt } from "./utils.ts"
 
 export type MovablePiece = {
     x: number
@@ -37,8 +37,8 @@ export type SkyStop = {
     horizon: string
 }
 
-export const BASIC_ICON_PATH = "/assets/icons"
-export const BASIC_SOUND_PATH = "/assets/sounds"
+export const BASIC_ICON_PATH = publicAsset("assets/icons")
+export const BASIC_SOUND_PATH = publicAsset("assets/sounds")
 
 export const CANVAS = {
     width: 1000,

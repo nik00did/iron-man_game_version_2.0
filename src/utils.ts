@@ -1,3 +1,13 @@
+export function assetBase(): string {
+    const base = import.meta.env?.BASE_URL
+
+    return typeof base === "string" && base.length > 0 ? base : "/"
+}
+
+export function publicAsset(path: string): string {
+    return `${assetBase()}${path.replace(/^\//, "")}`
+}
+
 export function addAudioElement(src: string): HTMLAudioElement {
     const audioSound = document.createElement("audio")
 

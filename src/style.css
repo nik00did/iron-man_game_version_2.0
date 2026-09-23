@@ -80,17 +80,17 @@ body {
 }
 
 .game-btn.start {
-    background-image: url("/assets/icons/controls/start.svg");
+    background-image: var(--icon-start);
 }
 
 .game-btn.pause {
-    background-image: url("/assets/icons/controls/pause.svg");
+    background-image: var(--icon-pause);
 }
 
 .game-btn.resume {
-    background-image: url("/assets/icons/controls/resume.svg");
+    background-image: var(--icon-resume);
 }
 
 .game-btn.restart {
-    background-image: url("/assets/icons/controls/restart.svg");
+    background-image: var(--icon-restart);
 }
