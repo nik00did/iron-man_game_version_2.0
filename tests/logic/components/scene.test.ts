@@ -9,7 +9,6 @@ import {
     OBSTACLES,
     DIAGONAL_COLORS,
     CHARACTER_START_X,
-    PLAYER_IDLE_SPEED,
     PLAYER_SPEED,
     OBSTACLE_SPAWN,
     ENERGY_TOKEN,
@@ -388,7 +387,7 @@ describe("Scene", () => {
             expect(CharacterMock).toHaveBeenCalledWith({
                 width: 50,
                 height: 50,
-                color: ICONS.IRON_MAN,
+                color: ICONS.MOVE_RIGHT,
                 x: CHARACTER_START_X,
                 y: CANVAS.height / 2,
             })
@@ -690,7 +689,7 @@ describe("Scene", () => {
             expect(scene.character.x).toBe(CHARACTER_START_X)
             expect(scene.character.y).toBe(CANVAS.height / 2)
             expect(scene.character.speedX).toBe(0)
-            expect(scene.character.image.src).toBe(ICONS.IRON_MAN)
+            expect(scene.character.image.src).toBe(ICONS.MOVE_RIGHT)
             expect(scene.key).toEqual({})
             expect(requestAnimationFrame).toHaveBeenCalledTimes(1)
             expect(controls.sync).toHaveBeenCalledWith(GAME_STATUS.PLAYING)
@@ -1316,7 +1315,23 @@ describe("Scene", () => {
             expect(scene.character.image.src).toBe(ICONS.MOVE_RIGHT)
             expect(scene.character.fillColor).toBeNull()
             expect(scene.character.x).toBe(CHARACTER_START_X)
-            expect(scene.character.speedX).toBe(PLAYER_IDLE_SPEED + PLAYER_SPEED)
+            expect(scene.character.speedX).toBe(PLAYER_SPEED)
+        })
+
+        it("moves left at player accel plus live building speed", () => {
+            const scene = new Scene()
+            scene.status = GAME_STATUS.PLAYING
+            jest.spyOn(scene, "scrollSpeedBonus").mockReturnValue(SKY.SPEED_STEP)
+
+            if (scene.key)
+                scene.key[KEYS.LEFT] = true
+
+            scene.moveCharacter()
+
+            expect(scene.character.image.src).toBe(ICONS.MOVE_LEFT)
+            expect(scene.character.speedX).toBe(
+                -PLAYER_SPEED + OBSTACLE_SPAWN.BUILDING_SPEED - SKY.SPEED_STEP,
+            )
         })
 
         it("restores the default pose when no arrow keys are held", () => {
@@ -1333,9 +1348,9 @@ describe("Scene", () => {
 
             scene.moveCharacter()
 
-            expect(scene.character.image.src).toBe(ICONS.IRON_MAN)
+            expect(scene.character.image.src).toBe(ICONS.MOVE_RIGHT)
             expect(scene.character.fillColor).toBeNull()
-            expect(scene.character.speedX).toBe(PLAYER_IDLE_SPEED)
+            expect(scene.character.speedX).toBe(0)
         })
 
         it("uses a diagonal fill and normalized speed for combined arrows", () => {
@@ -1351,9 +1366,7 @@ describe("Scene", () => {
             scene.moveCharacter()
 
             expect(scene.character.fillColor).toBe(DIAGONAL_COLORS.UP_RIGHT)
-            expect(scene.character.speedX).toBeCloseTo(
-                PLAYER_IDLE_SPEED + diagonalSpeed,
-            )
+            expect(scene.character.speedX).toBeCloseTo(diagonalSpeed)
             expect(scene.character.speedY).toBeCloseTo(-diagonalSpeed)
         })
 
@@ -1398,7 +1411,7 @@ describe("Scene", () => {
 
             scene.moveCharacter()
 
-            expect(scene.character.speedX).toBe(PLAYER_IDLE_SPEED)
+            expect(scene.character.speedX).toBe(0)
             expect(scene.character.image.src).toBe(ICONS.MOVE_RIGHT)
             expect(scene.character.fillColor).toBeNull()
         })

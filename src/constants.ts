@@ -48,7 +48,6 @@ export const CANVAS = {
 export const TICK_MS = 20
 
 export const PLAYER_SPEED = 4
-export const PLAYER_IDLE_SPEED = -1
 export const CHARACTER_START_X = 100
 
 export const DIAGONAL_COLORS = {
@@ -198,6 +197,7 @@ export const OBSTACLE_SPAWN = {
     CLOUD_Y_FROM_BOTTOM: { min: 320, max: 450 },
     PLANE_Y_FROM_BOTTOM: { min: 370, max: 490 },
     PLANE_SPEED: { min: -6, max: -3 },
+    BUILDING_SPEED: -2,
     BUILDING_HEIGHT: { min: 20, max: 300 },
 } as const
 
@@ -240,7 +240,7 @@ export const OBSTACLES: {
                 ),
         },
         {
-            speedX: -2,
+            speedX: OBSTACLE_SPAWN.BUILDING_SPEED,
             intervalFactor: 2,
             width: 60,
             color: ICONS.BUILDING,

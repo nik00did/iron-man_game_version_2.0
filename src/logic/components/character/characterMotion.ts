@@ -2,7 +2,7 @@ import {
     DIAGONAL_COLORS,
     ICONS,
     KEYS,
-    PLAYER_IDLE_SPEED,
+    OBSTACLE_SPAWN,
     PLAYER_SPEED,
 } from "../../../constants.ts"
 import type { CanvasSize, MovablePiece } from "../../../constants.ts"
@@ -26,8 +26,9 @@ export function clampPlayerY(piece: MovablePiece, canvas: CanvasSize): number {
 
 export function resolveCharacterMotion(
     keys: Record<string, boolean> | null,
+    scrollSpeedBonus = 0,
 ): CharacterMotion {
-    if (!keys) 
+    if (!keys)
         return idleMotion()
 
     const left = Boolean(keys[KEYS.LEFT])
@@ -42,7 +43,7 @@ export function resolveCharacterMotion(
             return idleMotion()
 
         return {
-            speedX: PLAYER_IDLE_SPEED,
+            speedX: 0,
             speedY: 0,
             appearance: null,
         }
@@ -51,7 +52,7 @@ export function resolveCharacterMotion(
     const length = Math.hypot(dirX, dirY)
 
     return {
-        speedX: PLAYER_IDLE_SPEED + (PLAYER_SPEED * dirX) / length,
+        speedX: horizontalSpeed(dirX, length, scrollSpeedBonus),
         speedY: (PLAYER_SPEED * dirY) / length,
         appearance: appearanceFor(dirX, dirY),
     }
@@ -59,14 +60,30 @@ export function resolveCharacterMotion(
 
 function idleMotion(): CharacterMotion {
     return {
-        speedX: PLAYER_IDLE_SPEED,
+        speedX: 0,
         speedY: 0,
-        appearance: { kind: "image", src: ICONS.IRON_MAN },
+        appearance: { kind: "image", src: ICONS.MOVE_RIGHT },
     }
 }
 
+function horizontalSpeed(
+    dirX: number,
+    length: number,
+    scrollSpeedBonus: number,
+): number {
+    if (dirX === 0)
+        return 0
+
+    const accel = (PLAYER_SPEED * dirX) / length
+
+    if (dirX < 0)
+        return accel + OBSTACLE_SPAWN.BUILDING_SPEED - scrollSpeedBonus
+
+    return accel
+}
+
 function axisDirection(negative: boolean, positive: boolean): number {
-    if (negative === positive) 
+    if (negative === positive)
         return 0
 
     return positive ? 1 : -1
@@ -85,14 +102,8 @@ function appearanceFor(dirX: number, dirY: number): CharacterAppearance {
     if (dirX < 0 && dirY > 0)
         return { kind: "fill", color: DIAGONAL_COLORS.DOWN_LEFT }
 
-    if (dirX < 0) 
+    if (dirX < 0)
         return { kind: "image", src: ICONS.MOVE_LEFT }
 
-    if (dirX > 0) 
-        return { kind: "image", src: ICONS.MOVE_RIGHT }
-
-    if (dirY < 0) 
-        return { kind: "image", src: ICONS.MOVE_UP }
-
-    return { kind: "image", src: ICONS.MOVE_DOWN }
+    return { kind: "image", src: ICONS.MOVE_RIGHT }
 }

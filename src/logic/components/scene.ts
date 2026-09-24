@@ -100,7 +100,7 @@ export class Scene {
         this.character = new Character({
             width: CHARACTER_SIZE,
             height: CHARACTER_SIZE,
-            color: ICONS.IRON_MAN,
+            color: ICONS.MOVE_RIGHT,
             x: CHARACTER_START_X,
             y: CANVAS.height / 2,
         })
@@ -309,7 +309,7 @@ export class Scene {
         this.character.speedX = 0
         this.character.speedY = 0
         this.character.fillColor = null
-        this.character.image.src = ICONS.IRON_MAN
+        this.character.image.src = ICONS.MOVE_RIGHT
         this.topScores = getTopScores()
     }
 
@@ -531,7 +531,7 @@ export class Scene {
         if (this.status !== GAME_STATUS.PLAYING || !this.key) 
             return
 
-        const motion = resolveCharacterMotion(this.key)
+        const motion = resolveCharacterMotion(this.key, this.scrollSpeedBonus())
 
         this.character.speedX = motion.speedX
         this.character.speedY = motion.speedY
