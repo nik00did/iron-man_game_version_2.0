@@ -551,12 +551,13 @@ export class Scene {
             token.update(this.context)
 
         this.character.update(this.context)
-        this.shooting.draw(this.context)
+        this.shooting.draw(this.context, this.elapsedMs())
         this.scoreHud.draw(
             this.context,
             this.score,
             this.topScores,
             this.shooting.ammo,
+            this.elapsedMs(),
         )
     }
 

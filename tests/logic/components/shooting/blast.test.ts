@@ -1,4 +1,4 @@
-import { BLAST, CANVAS } from "@src/constants.ts"
+import { BLAST, CANVAS, SKY } from "@src/constants.ts"
 import { Blast } from "@src/logic/components/shooting"
 
 describe("Blast", () => {
@@ -23,17 +23,31 @@ describe("Blast", () => {
     })
 
     describe("update", () => {
-        it("fills a yellow square at the blast position", () => {
+        it("fills a gold square on a dark sky", () => {
             const blast = new Blast({ x: 8, y: 12 })
             const ctx = {
+                canvas: { height: CANVAS.height },
                 fillRect: jest.fn(),
                 fillStyle: "",
             }
 
-            blast.update(ctx as unknown as CanvasRenderingContext2D)
+            blast.update(ctx as unknown as CanvasRenderingContext2D, SKY.PERIOD_MS * 3)
 
             expect(ctx.fillStyle).toBe(BLAST.COLOR)
             expect(ctx.fillRect).toHaveBeenCalledWith(8, 12, BLAST.SIZE, BLAST.SIZE)
+        })
+
+        it("fills a dark square on a light horizon", () => {
+            const blast = new Blast({ x: 8, y: CANVAS.height })
+            const ctx = {
+                canvas: { height: CANVAS.height },
+                fillRect: jest.fn(),
+                fillStyle: "",
+            }
+
+            blast.update(ctx as unknown as CanvasRenderingContext2D, 0)
+
+            expect(ctx.fillStyle).toBe(BLAST.COLOR_DARK)
         })
     })
 

@@ -61,6 +61,7 @@ export const DIAGONAL_COLORS = {
 export const SKY = {
     PERIOD_MS: 10_000,
     SPEED_STEP: 1,
+    LUMINANCE_THRESHOLD: 0.22,
     STOPS: [
         { zenith: "#1e6bb8", horizon: "#7ec8e8" },
         { zenith: "#3d2b5a", horizon: "#e07a5f" },
@@ -81,8 +82,10 @@ export const SCORE_HUD = {
     SCORE_LABEL: "Your score",
     BLAST_LABEL: "Blast",
     BLAST_GAP: 16,
-    SCORE_COLOR: "#000",
-    RANK_COLORS: ["red", "yellow", "green"],
+    INK_DARK: "#111827",
+    INK_LIGHT: "#f8fafc",
+    RANK_COLORS_DARK: ["#b91c1c", "#a16207", "#166534"],
+    RANK_COLORS_LIGHT: ["#f87171", "#facc15", "#4ade80"],
     SCORE_Y: 16,
     RANK_X: 16,
     RANK_Y: 16,
@@ -174,6 +177,7 @@ export const ENTITY_TYPE = {
 export const BLAST = {
     SIZE: 10,
     COLOR: "#ffd400",
+    COLOR_DARK: "#111827",
     SPEED: 10,
     MAX_AMMO: 3,
 } as const

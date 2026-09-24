@@ -1,6 +1,14 @@
-import { SKY } from "@src/constants.ts"
+import { BLAST, SCORE_HUD, SKY } from "@src/constants.ts"
 import type { SkyStop } from "@src/constants.ts"
-import { skyColorsAt, timePeriodIndex } from "@src/logic/components/background"
+import {
+    blastColorAt,
+    hudInkAt,
+    hudRankColorsAt,
+    isLightSky,
+    relativeLuminance,
+    skyColorsAt,
+    timePeriodIndex,
+} from "@src/logic/components/background"
 
 const STOPS: readonly SkyStop[] = [
     { zenith: "#000000", horizon: "#000000" },
@@ -62,5 +70,44 @@ describe("skyColorsAt", () => {
             zenith: "#000080",
             horizon: "#800000",
         })
+    })
+})
+
+describe("relativeLuminance", () => {
+    it("is 0 for black and 1 for white", () => {
+        expect(relativeLuminance("#000000")).toBe(0)
+        expect(relativeLuminance("#ffffff")).toBe(1)
+    })
+})
+
+describe("isLightSky", () => {
+    it("treats the bright-day zenith as light and night as dark", () => {
+        expect(isLightSky("#4aa3de")).toBe(true)
+        expect(isLightSky("#0b1026")).toBe(false)
+    })
+})
+
+describe("hudInkAt", () => {
+    it("uses light ink on a dark zenith and dark ink on a bright zenith", () => {
+        expect(hudInkAt(0)).toBe(SCORE_HUD.INK_LIGHT)
+        expect(hudInkAt(SKY.PERIOD_MS * 7)).toBe(SCORE_HUD.INK_DARK)
+    })
+})
+
+describe("hudRankColorsAt", () => {
+    it("switches rank palettes with the zenith", () => {
+        expect(hudRankColorsAt(SKY.PERIOD_MS * 3)).toEqual(
+            SCORE_HUD.RANK_COLORS_LIGHT,
+        )
+        expect(hudRankColorsAt(SKY.PERIOD_MS * 7)).toEqual(
+            SCORE_HUD.RANK_COLORS_DARK,
+        )
+    })
+})
+
+describe("blastColorAt", () => {
+    it("uses gold on a dark sky and dark fill on a light horizon", () => {
+        expect(blastColorAt(SKY.PERIOD_MS * 3, 12, 500)).toBe(BLAST.COLOR)
+        expect(blastColorAt(0, 500, 500)).toBe(BLAST.COLOR_DARK)
     })
 })

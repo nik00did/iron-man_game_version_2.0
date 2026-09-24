@@ -74,9 +74,9 @@ export class Shooting {
         return remainingObstacles
     }
 
-    draw(ctx: CanvasRenderingContext2D): void {
+    draw(ctx: CanvasRenderingContext2D, elapsedMs = 0): void {
         for (const blast of this.blasts)
-            blast.update(ctx)
+            blast.update(ctx, elapsedMs)
     }
 
     clear(): void {

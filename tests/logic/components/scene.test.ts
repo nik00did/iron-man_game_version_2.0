@@ -1549,12 +1549,14 @@ describe("Scene", () => {
             )
             expect(asMock(scene.shooting.draw)).toHaveBeenCalledWith(
                 scene.context,
+                TICK_MS,
             )
             expect(asMock(scene.scoreHud.draw)).toHaveBeenCalledWith(
                 scene.context,
                 scene.score,
                 scene.topScores,
                 scene.shooting.ammo,
+                TICK_MS,
             )
         })
 

@@ -1,4 +1,4 @@
-import { SKY } from "../../../constants.ts"
+import { BLAST, SCORE_HUD, SKY } from "../../../constants.ts"
 import type { SkyStop } from "../../../constants.ts"
 
 type Rgb = {
@@ -36,6 +36,55 @@ function lerpHex(from: string, to: string, t: number): string {
         g: lerpChannel(start.g, end.g, t),
         b: lerpChannel(start.b, end.b, t),
     })
+}
+
+function channelToLinear(channel: number): number {
+    const srgb = channel / 255
+
+    return srgb <= 0.04045 ? srgb / 12.92 : ((srgb + 0.055) / 1.055) ** 2.4
+}
+
+export function relativeLuminance(hex: string): number {
+    const { r, g, b } = parseHex(hex)
+
+    return (
+        0.2126 * channelToLinear(r) +
+        0.7152 * channelToLinear(g) +
+        0.0722 * channelToLinear(b)
+    )
+}
+
+export function isLightSky(
+    hex: string,
+    threshold: number = SKY.LUMINANCE_THRESHOLD,
+): boolean {
+    return relativeLuminance(hex) > threshold
+}
+
+export function hudInkAt(elapsedMs: number): string {
+    const { zenith } = skyColorsAt(elapsedMs)
+
+    return isLightSky(zenith) ? SCORE_HUD.INK_DARK : SCORE_HUD.INK_LIGHT
+}
+
+export function hudRankColorsAt(elapsedMs: number): readonly string[] {
+    const { zenith } = skyColorsAt(elapsedMs)
+
+    return isLightSky(zenith)
+        ? SCORE_HUD.RANK_COLORS_DARK
+        : SCORE_HUD.RANK_COLORS_LIGHT
+}
+
+export function blastColorAt(
+    elapsedMs: number,
+    y: number,
+    height: number,
+): string {
+    const { zenith, horizon } = skyColorsAt(elapsedMs)
+    const t = height <= 0 ? 0 : Math.min(1, Math.max(0, y / height))
+    const skyHex = lerpHex(zenith, horizon, t)
+
+    return isLightSky(skyHex) ? BLAST.COLOR_DARK : BLAST.COLOR
 }
 
 export function timePeriodIndex(
