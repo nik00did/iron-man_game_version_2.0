@@ -58,7 +58,7 @@ export const DIAGONAL_COLORS = {
 } as const
 
 export const SKY = {
-    PERIOD_MS: 10_000,
+    PERIOD_MS: 40_000,
     SPEED_STEP: 1,
     LUMINANCE_THRESHOLD: 0.22,
     STOPS: [
