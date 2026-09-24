@@ -155,7 +155,7 @@ describe("Scene", () => {
     let context: { clearRect: jest.Mock }
     let canvas: CanvasMock
     let wrapper: WrapperMock
-    let controls: { sync: jest.Mock }
+    let controls: { sync: jest.Mock; setRunStats: jest.Mock }
 
     beforeEach(() => {
         context = { clearRect: jest.fn() }
@@ -168,7 +168,7 @@ describe("Scene", () => {
             className: "",
             appendChild: jest.fn(),
         }
-        controls = { sync: jest.fn() }
+        controls = { sync: jest.fn(), setRunStats: jest.fn() }
 
         Sound.mockImplementation(
             (): {
@@ -333,6 +333,7 @@ describe("Scene", () => {
         Shooting.mockClear()
         GameControls.mockClear()
         controls.sync.mockClear()
+        controls.setRunStats.mockClear()
 
         Object.defineProperty(globalThis, "document", {
             configurable: true,

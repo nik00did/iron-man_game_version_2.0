@@ -162,7 +162,19 @@ export const GAME_CONTROLS = {
     PAUSE_CLASS: "pause",
     RESUME_CLASS: "resume",
     RESTART_CLASS: "restart",
+    HELP_CLASS: "game-help",
+    HELP_BLAST_CLASS: "game-help-blast",
+    HELP_SCORE_CLASS: "game-help-score",
 }
+
+export const GAME_HELP_LINES = [
+    "Arrows — fly (right speeds up, left slows vs the city)",
+    "Center play — start (Enter)",
+    "Top-right pause / resume (P / Esc)",
+    "Center replay — restart after a crash",
+    "Collect tokens for ammo (max 3) and score; Space fires",
+    "Score is flight time plus tokens",
+] as const
 
 export const ENTITY_TYPE = {
     CLOUD: "cloud",

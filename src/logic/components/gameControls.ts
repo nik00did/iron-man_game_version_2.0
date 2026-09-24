@@ -1,4 +1,10 @@
-import { GAME_CONTROLS, GAME_STATUS } from "../../constants.ts"
+import {
+    BLAST,
+    GAME_CONTROLS,
+    GAME_HELP_LINES,
+    GAME_STATUS,
+    SCORE_HUD,
+} from "../../constants.ts"
 import type { GameStatus } from "../../constants.ts"
 
 export type GameControlHandlers = {
@@ -10,6 +16,9 @@ export type GameControlHandlers = {
 
 export class GameControls {
     veil: HTMLDivElement
+    help: HTMLDivElement
+    blastStat: HTMLParagraphElement
+    scoreStat: HTMLParagraphElement
     startButton: HTMLButtonElement
     pauseButton: HTMLButtonElement
     resumeButton: HTMLButtonElement
@@ -17,6 +26,9 @@ export class GameControls {
 
     constructor(root: HTMLElement, handlers: GameControlHandlers) {
         this.veil = this.addDiv(root, GAME_CONTROLS.VEIL_CLASS)
+        this.blastStat = document.createElement("p")
+        this.scoreStat = document.createElement("p")
+        this.help = this.addHelp(this.veil)
         this.startButton = this.addButton(
             root,
             GAME_CONTROLS.START_CLASS,
@@ -41,6 +53,7 @@ export class GameControls {
             "Restart",
             handlers.onRestart,
         )
+        this.setRunStats(0, 0)
         this.sync(GAME_STATUS.IDLE)
     }
 
@@ -50,6 +63,34 @@ export class GameControls {
         this.pauseButton.hidden = status !== GAME_STATUS.PLAYING
         this.resumeButton.hidden = status !== GAME_STATUS.PAUSED
         this.restartButton.hidden = status !== GAME_STATUS.CRASHED
+    }
+
+    setRunStats(score: number, ammo: number): void {
+        this.blastStat.textContent = `${SCORE_HUD.BLAST_LABEL}: ${ammo}/${BLAST.MAX_AMMO}`
+        this.scoreStat.textContent = `${SCORE_HUD.SCORE_LABEL}: ${Math.floor(score)}`
+    }
+
+    addHelp(veil: HTMLDivElement): HTMLDivElement {
+        const help = document.createElement("div")
+        const list = document.createElement("ul")
+
+        help.className = GAME_CONTROLS.HELP_CLASS
+
+        for (const line of GAME_HELP_LINES) {
+            const item = document.createElement("li")
+
+            item.textContent = line
+            list.appendChild(item)
+        }
+
+        this.blastStat.className = GAME_CONTROLS.HELP_BLAST_CLASS
+        this.scoreStat.className = GAME_CONTROLS.HELP_SCORE_CLASS
+        help.appendChild(list)
+        help.appendChild(this.blastStat)
+        help.appendChild(this.scoreStat)
+        veil.appendChild(help)
+
+        return help
     }
 
     addDiv(root: HTMLElement, className: string): HTMLDivElement {

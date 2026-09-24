@@ -111,9 +111,13 @@ export class Scene {
     mount(): void {
         document.body.insertBefore(this.wrapper, document.body.childNodes[0])
         this.bindInput()
-        this.controls.sync(this.status)
-
+        this.syncControls()
         this.paintIdle()
+    }
+
+    syncControls(): void {
+        this.controls.sync(this.status)
+        this.controls.setRunStats(this.score, this.shooting.ammo)
     }
 
     async paintIdle(): Promise<void> {
@@ -201,7 +205,7 @@ export class Scene {
 
         this.status = GAME_STATUS.PLAYING
         this.startMusic()
-        this.controls.sync(this.status)
+        this.syncControls()
         this.beginLoop()
     }
 
@@ -212,7 +216,7 @@ export class Scene {
         this.status = GAME_STATUS.PAUSED
         this.clearKeys()
         this.stopLoop()
-        this.controls.sync(this.status)
+        this.syncControls()
     }
 
     resume(): void {
@@ -231,7 +235,7 @@ export class Scene {
         this.status = GAME_STATUS.PLAYING
         this.musicStarted = true
         this.music.playFromStart()
-        this.controls.sync(this.status)
+        this.syncControls()
         this.beginLoop()
     }
 
@@ -373,7 +377,7 @@ export class Scene {
         this.clearKeys()
         this.status = GAME_STATUS.CRASHED
         this.stopLoop()
-        this.controls.sync(this.status)
+        this.syncControls()
     }
 
     handleObstacleCollision(): void {
