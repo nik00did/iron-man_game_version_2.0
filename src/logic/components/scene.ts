@@ -100,7 +100,7 @@ export class Scene {
         this.character = new Character({
             width: CHARACTER_SIZE,
             height: CHARACTER_SIZE,
-            color: ICONS.IRON_MAN,
+            color: ICONS.MOVE_RIGHT,
             x: CHARACTER_START_X,
             y: CANVAS.height / 2,
         })
@@ -111,9 +111,13 @@ export class Scene {
     mount(): void {
         document.body.insertBefore(this.wrapper, document.body.childNodes[0])
         this.bindInput()
-        this.controls.sync(this.status)
-
+        this.syncControls()
         this.paintIdle()
+    }
+
+    syncControls(): void {
+        this.controls.sync(this.status)
+        this.controls.setRunStats(this.score, this.shooting.ammo)
     }
 
     async paintIdle(): Promise<void> {
@@ -201,7 +205,7 @@ export class Scene {
 
         this.status = GAME_STATUS.PLAYING
         this.startMusic()
-        this.controls.sync(this.status)
+        this.syncControls()
         this.beginLoop()
     }
 
@@ -212,7 +216,7 @@ export class Scene {
         this.status = GAME_STATUS.PAUSED
         this.clearKeys()
         this.stopLoop()
-        this.controls.sync(this.status)
+        this.syncControls()
     }
 
     resume(): void {
@@ -231,7 +235,7 @@ export class Scene {
         this.status = GAME_STATUS.PLAYING
         this.musicStarted = true
         this.music.playFromStart()
-        this.controls.sync(this.status)
+        this.syncControls()
         this.beginLoop()
     }
 
@@ -309,7 +313,7 @@ export class Scene {
         this.character.speedX = 0
         this.character.speedY = 0
         this.character.fillColor = null
-        this.character.image.src = ICONS.IRON_MAN
+        this.character.image.src = ICONS.MOVE_RIGHT
         this.topScores = getTopScores()
     }
 
@@ -373,7 +377,7 @@ export class Scene {
         this.clearKeys()
         this.status = GAME_STATUS.CRASHED
         this.stopLoop()
-        this.controls.sync(this.status)
+        this.syncControls()
     }
 
     handleObstacleCollision(): void {
@@ -531,7 +535,7 @@ export class Scene {
         if (this.status !== GAME_STATUS.PLAYING || !this.key) 
             return
 
-        const motion = resolveCharacterMotion(this.key)
+        const motion = resolveCharacterMotion(this.key, this.scrollSpeedBonus())
 
         this.character.speedX = motion.speedX
         this.character.speedY = motion.speedY
@@ -551,12 +555,13 @@ export class Scene {
             token.update(this.context)
 
         this.character.update(this.context)
-        this.shooting.draw(this.context)
+        this.shooting.draw(this.context, this.elapsedMs())
         this.scoreHud.draw(
             this.context,
             this.score,
             this.topScores,
             this.shooting.ammo,
+            this.elapsedMs(),
         )
     }
 

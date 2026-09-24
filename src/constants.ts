@@ -48,7 +48,6 @@ export const CANVAS = {
 export const TICK_MS = 20
 
 export const PLAYER_SPEED = 4
-export const PLAYER_IDLE_SPEED = -1
 export const CHARACTER_START_X = 100
 
 export const DIAGONAL_COLORS = {
@@ -59,8 +58,9 @@ export const DIAGONAL_COLORS = {
 } as const
 
 export const SKY = {
-    PERIOD_MS: 10_000,
+    PERIOD_MS: 40_000,
     SPEED_STEP: 1,
+    LUMINANCE_THRESHOLD: 0.22,
     STOPS: [
         { zenith: "#1e6bb8", horizon: "#7ec8e8" },
         { zenith: "#3d2b5a", horizon: "#e07a5f" },
@@ -81,8 +81,10 @@ export const SCORE_HUD = {
     SCORE_LABEL: "Your score",
     BLAST_LABEL: "Blast",
     BLAST_GAP: 16,
-    SCORE_COLOR: "#000",
-    RANK_COLORS: ["red", "yellow", "green"],
+    INK_DARK: "#111827",
+    INK_LIGHT: "#f8fafc",
+    RANK_COLORS_DARK: ["#b91c1c", "#a16207", "#166534"],
+    RANK_COLORS_LIGHT: ["#f87171", "#facc15", "#4ade80"],
     SCORE_Y: 16,
     RANK_X: 16,
     RANK_Y: 16,
@@ -160,7 +162,19 @@ export const GAME_CONTROLS = {
     PAUSE_CLASS: "pause",
     RESUME_CLASS: "resume",
     RESTART_CLASS: "restart",
+    HELP_CLASS: "game-help",
+    HELP_BLAST_CLASS: "game-help-blast",
+    HELP_SCORE_CLASS: "game-help-score",
 }
+
+export const GAME_HELP_LINES = [
+    "Arrows — fly (right speeds up, left slows vs the city)",
+    "Center play — start (Enter)",
+    "Top-right pause / resume (P / Esc)",
+    "Center replay — restart after a crash",
+    "Collect tokens for ammo (max 3) and score; Space fires",
+    "Score is flight time plus tokens",
+] as const
 
 export const ENTITY_TYPE = {
     CLOUD: "cloud",
@@ -174,6 +188,7 @@ export const ENTITY_TYPE = {
 export const BLAST = {
     SIZE: 10,
     COLOR: "#ffd400",
+    COLOR_DARK: "#111827",
     SPEED: 10,
     MAX_AMMO: 3,
 } as const
@@ -194,6 +209,7 @@ export const OBSTACLE_SPAWN = {
     CLOUD_Y_FROM_BOTTOM: { min: 320, max: 450 },
     PLANE_Y_FROM_BOTTOM: { min: 370, max: 490 },
     PLANE_SPEED: { min: -6, max: -3 },
+    BUILDING_SPEED: -2,
     BUILDING_HEIGHT: { min: 20, max: 300 },
 } as const
 
@@ -236,7 +252,7 @@ export const OBSTACLES: {
                 ),
         },
         {
-            speedX: -2,
+            speedX: OBSTACLE_SPAWN.BUILDING_SPEED,
             intervalFactor: 2,
             width: 60,
             color: ICONS.BUILDING,

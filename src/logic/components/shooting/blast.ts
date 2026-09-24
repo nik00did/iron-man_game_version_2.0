@@ -1,5 +1,6 @@
 import { BLAST, CANVAS } from "../../../constants.ts"
 import type { CanvasSize } from "../../../constants.ts"
+import { blastColorAt } from "../background"
 import { SceneEntity } from "../sceneEntity.ts"
 
 export type BlastProps = {
@@ -19,8 +20,10 @@ export class Blast extends SceneEntity {
         })
     }
 
-    update(ctx: CanvasRenderingContext2D): void {
-        ctx.fillStyle = BLAST.COLOR
+    update(ctx: CanvasRenderingContext2D, elapsedMs = 0): void {
+        const height = ctx.canvas?.height ?? CANVAS.height
+
+        ctx.fillStyle = blastColorAt(elapsedMs, this.y, height)
         ctx.fillRect(this.x, this.y, this.width, this.height)
     }
 

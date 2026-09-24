@@ -170,8 +170,8 @@ describe("Shooting", () => {
 
             shooting.draw(ctx)
 
-            expect(update).toHaveBeenNthCalledWith(1, ctx)
-            expect(update).toHaveBeenNthCalledWith(2, ctx)
+            expect(update).toHaveBeenNthCalledWith(1, ctx, 0)
+            expect(update).toHaveBeenNthCalledWith(2, ctx, 0)
             update.mockRestore()
         })
     })

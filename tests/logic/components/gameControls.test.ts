@@ -1,12 +1,14 @@
-import { GAME_CONTROLS, GAME_STATUS } from "@src/constants.ts"
+import { BLAST, GAME_CONTROLS, GAME_HELP_LINES, GAME_STATUS, SCORE_HUD } from "@src/constants.ts"
 import { GameControls } from "@src/logic/components/gameControls.ts"
 
 type ElementMock = {
     className: string
     hidden: boolean
     type: string
+    textContent: string
     addEventListener: jest.Mock
     setAttribute: jest.Mock
+    appendChild: jest.Mock
 }
 
 function createEl(): ElementMock {
@@ -14,8 +16,10 @@ function createEl(): ElementMock {
         className: "",
         hidden: false,
         type: "",
+        textContent: "",
         addEventListener: jest.fn(),
         setAttribute: jest.fn(),
+        appendChild: jest.fn(),
     }
 }
 
@@ -75,6 +79,14 @@ describe("GameControls", () => {
         expect(document.createElement).toHaveBeenCalledWith("button")
         expect(root.appendChild).toHaveBeenCalledTimes(5)
         expect(controls.veil.className).toBe(GAME_CONTROLS.VEIL_CLASS)
+        expect(controls.help.className).toBe(GAME_CONTROLS.HELP_CLASS)
+        expect(controls.veil.appendChild).toHaveBeenCalledWith(controls.help)
+        expect(controls.blastStat.className).toBe(GAME_CONTROLS.HELP_BLAST_CLASS)
+        expect(controls.scoreStat.className).toBe(GAME_CONTROLS.HELP_SCORE_CLASS)
+        expect(controls.blastStat.textContent).toBe(
+            `${SCORE_HUD.BLAST_LABEL}: 0/${BLAST.MAX_AMMO}`,
+        )
+        expect(controls.scoreStat.textContent).toBe(`${SCORE_HUD.SCORE_LABEL}: 0`)
         expect(controls.startButton.className).toBe(
             `${GAME_CONTROLS.BUTTON_CLASS} ${GAME_CONTROLS.START_CLASS}`,
         )
@@ -155,5 +167,26 @@ describe("GameControls", () => {
         expect(onPause).toHaveBeenCalledTimes(1)
         expect(onResume).toHaveBeenCalledTimes(1)
         expect(onRestart).toHaveBeenCalledTimes(1)
+    })
+
+    it("writes the help lines onto the veil", () => {
+        createControls()
+
+        const listItems = jest
+            .mocked(document.createElement)
+            .mock.calls.filter((call) => call[0] === "li")
+
+        expect(listItems).toHaveLength(GAME_HELP_LINES.length)
+    })
+
+    it("updates the live blast and score labels", () => {
+        const controls = createControls()
+
+        controls.setRunStats(11.8, 2)
+
+        expect(controls.blastStat.textContent).toBe(
+            `${SCORE_HUD.BLAST_LABEL}: 2/${BLAST.MAX_AMMO}`,
+        )
+        expect(controls.scoreStat.textContent).toBe(`${SCORE_HUD.SCORE_LABEL}: 11`)
     })
 })

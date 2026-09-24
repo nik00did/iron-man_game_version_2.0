@@ -1,4 +1,5 @@
 import { BLAST, SCORE_HUD } from "../../../constants.ts"
+import { hudInkAt, hudRankColorsAt } from "../background"
 
 function formatScore(score: number): string {
     return String(Math.floor(score))
@@ -13,11 +14,15 @@ function blastText(ammo: number): string {
 }
 
 export class ScoreHud {
-    drawScore(ctx: CanvasRenderingContext2D, score: number): void {
+    drawScore(
+        ctx: CanvasRenderingContext2D,
+        score: number,
+        elapsedMs = 0,
+    ): void {
         ctx.font = SCORE_HUD.FONT
         ctx.textBaseline = "top"
 
-        ctx.fillStyle = SCORE_HUD.SCORE_COLOR
+        ctx.fillStyle = hudInkAt(elapsedMs)
         ctx.textAlign = "center"
         ctx.fillText(
             scoreText(score),
@@ -30,10 +35,11 @@ export class ScoreHud {
         ctx: CanvasRenderingContext2D,
         score: number,
         ammo: number,
+        elapsedMs = 0,
     ): void {
         ctx.font = SCORE_HUD.FONT
         ctx.textBaseline = "top"
-        ctx.fillStyle = SCORE_HUD.SCORE_COLOR
+        ctx.fillStyle = hudInkAt(elapsedMs)
         ctx.textAlign = "right"
 
         const scoreLeft =
@@ -46,13 +52,18 @@ export class ScoreHud {
         )
     }
 
-    drawRating(ctx: CanvasRenderingContext2D, topScores: number[]): void {
+    drawRating(
+        ctx: CanvasRenderingContext2D,
+        topScores: number[],
+        elapsedMs = 0,
+    ): void {
         ctx.textAlign = "left"
+        const rankColors = hudRankColorsAt(elapsedMs)
+        const ink = hudInkAt(elapsedMs)
 
         for (let index = 0; index < topScores.length; index += 1) {
             const score = topScores[index]
-            ctx.fillStyle =
-                SCORE_HUD.RANK_COLORS[index] ?? SCORE_HUD.SCORE_COLOR
+            ctx.fillStyle = rankColors[index] ?? ink
             ctx.fillText(
                 `${index + 1}. ${formatScore(score)}`,
                 SCORE_HUD.RANK_X,
@@ -67,12 +78,13 @@ export class ScoreHud {
         score: number,
         topScores: number[],
         ammo: number,
+        elapsedMs = 0,
     ): void {
         ctx.save()
 
-        this.drawScore(ctx, score)
-        this.drawBlasts(ctx, score, ammo)
-        this.drawRating(ctx, topScores)
+        this.drawScore(ctx, score, elapsedMs)
+        this.drawBlasts(ctx, score, ammo, elapsedMs)
+        this.drawRating(ctx, topScores, elapsedMs)
 
         ctx.restore()
     }

@@ -1,4 +1,4 @@
-import { BLAST, SCORE_HUD } from "@src/constants.ts"
+import { BLAST, SCORE_HUD, SKY } from "@src/constants.ts"
 import ScoreHud from "@src/logic/components/scoreHud"
 
 type HudCtx = {
@@ -37,13 +37,26 @@ describe("ScoreHud", () => {
 
             expect(ctx.font).toBe(SCORE_HUD.FONT)
             expect(ctx.textBaseline).toBe("top")
-            expect(ctx.fillStyle).toBe(SCORE_HUD.SCORE_COLOR)
+            expect(ctx.fillStyle).toBe(SCORE_HUD.INK_LIGHT)
             expect(ctx.textAlign).toBe("center")
             expect(ctx.fillText).toHaveBeenCalledWith(
                 "Your score: 11",
                 500,
                 SCORE_HUD.SCORE_Y,
             )
+        })
+
+        it("uses dark ink on a bright-day zenith", () => {
+            const hud = new ScoreHud()
+            const ctx = createCtx()
+
+            hud.drawScore(
+                ctx as unknown as CanvasRenderingContext2D,
+                11,
+                SKY.PERIOD_MS * 7,
+            )
+
+            expect(ctx.fillStyle).toBe(SCORE_HUD.INK_DARK)
         })
 
         it("floors fractional scores for display", () => {
@@ -71,7 +84,7 @@ describe("ScoreHud", () => {
 
             expect(ctx.font).toBe(SCORE_HUD.FONT)
             expect(ctx.textBaseline).toBe("top")
-            expect(ctx.fillStyle).toBe(SCORE_HUD.SCORE_COLOR)
+            expect(ctx.fillStyle).toBe(SCORE_HUD.INK_LIGHT)
             expect(ctx.textAlign).toBe("right")
             expect(ctx.fillText).toHaveBeenCalledWith(
                 `Blast: 2/${BLAST.MAX_AMMO}`,
@@ -110,7 +123,20 @@ describe("ScoreHud", () => {
                 SCORE_HUD.RANK_X,
                 SCORE_HUD.RANK_Y + lineHeight * 2,
             )
-            expect(ctx.fillStyle).toBe(SCORE_HUD.RANK_COLORS[2])
+            expect(ctx.fillStyle).toBe(SCORE_HUD.RANK_COLORS_LIGHT[2])
+        })
+
+        it("uses dark rank colors on a bright-day zenith", () => {
+            const hud = new ScoreHud()
+            const ctx = createCtx()
+
+            hud.drawRating(
+                ctx as unknown as CanvasRenderingContext2D,
+                [10, 8, 3],
+                SKY.PERIOD_MS * 7,
+            )
+
+            expect(ctx.fillStyle).toBe(SCORE_HUD.RANK_COLORS_DARK[2])
         })
 
         it("does not draw when there are no scores", () => {
@@ -154,9 +180,9 @@ describe("ScoreHud", () => {
             )
 
             expect(ctx.save).toHaveBeenCalledTimes(1)
-            expect(drawScore).toHaveBeenCalledWith(ctx, 11)
-            expect(drawBlasts).toHaveBeenCalledWith(ctx, 11, 2)
-            expect(drawRating).toHaveBeenCalledWith(ctx, topScores)
+            expect(drawScore).toHaveBeenCalledWith(ctx, 11, 0)
+            expect(drawBlasts).toHaveBeenCalledWith(ctx, 11, 2, 0)
+            expect(drawRating).toHaveBeenCalledWith(ctx, topScores, 0)
             expect(ctx.restore).toHaveBeenCalledTimes(1)
         })
     })
