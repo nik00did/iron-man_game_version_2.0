@@ -50,9 +50,8 @@ const CharacterMock = jest.fn()
 const ObstacleMock = jest.fn()
 const EnergyTokenMock = jest.fn()
 const Background = jest.fn()
-const ScoreHud = jest.fn()
 const Shooting = jest.fn()
-const GameControls = jest.fn()
+const GameDisplay = jest.fn()
 const getTopScores = jest.fn()
 const saveScore = jest.fn()
 
@@ -108,11 +107,9 @@ jest.unstable_mockModule(
 jest.unstable_mockModule(
     "@src/logic/components/scoreHud",
     (): {
-        default: jest.Mock
         getTopScores: jest.Mock
         saveScore: jest.Mock
     } => ({
-        default: ScoreHud,
         getTopScores,
         saveScore,
     }),
@@ -124,9 +121,9 @@ jest.unstable_mockModule(
     }),
 )
 jest.unstable_mockModule(
-    "@src/logic/components/gameControls.ts",
-    (): { GameControls: jest.Mock } => ({
-        GameControls,
+    "@src/logic/components/gameDisplay.ts",
+    (): { GameDisplay: jest.Mock } => ({
+        GameDisplay,
     }),
 )
 
@@ -157,7 +154,7 @@ describe("Scene", () => {
     let context: { clearRect: jest.Mock }
     let canvas: CanvasMock
     let wrapper: WrapperMock
-    let controls: { sync: jest.Mock; setRunStats: jest.Mock }
+    let display: { sync: jest.Mock; draw: jest.Mock }
 
     beforeEach(() => {
         context = { clearRect: jest.fn() }
@@ -170,7 +167,7 @@ describe("Scene", () => {
             className: "",
             appendChild: jest.fn(),
         }
-        controls = { sync: jest.fn(), setRunStats: jest.fn() }
+        display = { sync: jest.fn(), draw: jest.fn() }
 
         Sound.mockImplementation(
             (): {
@@ -292,9 +289,6 @@ describe("Scene", () => {
         Background.mockImplementation((): { update: jest.Mock } => ({
             update: jest.fn(),
         }))
-        ScoreHud.mockImplementation((): { draw: jest.Mock } => ({
-            draw: jest.fn(),
-        }))
         Shooting.mockImplementation(
             (): {
                 blasts: unknown[]
@@ -320,7 +314,7 @@ describe("Scene", () => {
                 clear: jest.fn(),
             }),
         )
-        GameControls.mockImplementation(() => controls)
+        GameDisplay.mockImplementation(() => display)
         getTopScores.mockReset()
         saveScore.mockReset()
         getTopScores.mockReturnValue([12, 8, 3])
@@ -331,11 +325,10 @@ describe("Scene", () => {
         ObstacleMock.mockClear()
         EnergyTokenMock.mockClear()
         Background.mockClear()
-        ScoreHud.mockClear()
         Shooting.mockClear()
-        GameControls.mockClear()
-        controls.sync.mockClear()
-        controls.setRunStats.mockClear()
+        GameDisplay.mockClear()
+        display.sync.mockClear()
+        display.draw.mockClear()
 
         Object.defineProperty(globalThis, "document", {
             configurable: true,
@@ -386,7 +379,7 @@ describe("Scene", () => {
             expect(canvas.getContext).toHaveBeenCalledWith("2d")
             expect(Sound).toHaveBeenCalledWith(SOUNDS.FIRST_FIGHT)
             expect(Sound).toHaveBeenCalledWith(SOUNDS.LOVE_ME_AGAIN)
-            expect(GameControls).toHaveBeenCalledTimes(1)
+            expect(GameDisplay).toHaveBeenCalledTimes(1)
             expect(CharacterMock).toHaveBeenCalledWith({
                 width: 50,
                 height: 50,
@@ -395,7 +388,6 @@ describe("Scene", () => {
                 y: CANVAS.height / 2,
             })
             expect(Background).toHaveBeenCalledTimes(1)
-            expect(ScoreHud).toHaveBeenCalledTimes(1)
             expect(Shooting).toHaveBeenCalledTimes(1)
             expect(getTopScores).toHaveBeenCalledTimes(1)
             expect(scene.topScores).toEqual([12, 8, 3])
@@ -427,7 +419,11 @@ describe("Scene", () => {
             expect(scene.status).toBe(GAME_STATUS.IDLE)
             expect(requestAnimationFrame).not.toHaveBeenCalled()
             expect(asMock(scene.character.whenReady)).toHaveBeenCalledTimes(1)
-            expect(controls.sync).toHaveBeenCalledWith(GAME_STATUS.IDLE)
+            expect(display.sync).toHaveBeenCalledWith(
+                GAME_STATUS.IDLE,
+                0,
+                0,
+            )
             expect(window.addEventListener).toHaveBeenCalledWith(
                 "keydown",
                 expect.any(Function),
@@ -498,7 +494,7 @@ describe("Scene", () => {
             expect(asMock(scene.character.update)).toHaveBeenCalledWith(
                 scene.context,
             )
-            expect(asMock(scene.scoreHud.draw)).toHaveBeenCalled()
+            expect(asMock(scene.display.draw)).toHaveBeenCalled()
         })
 
         it("does not paint if the game started before images loaded", async () => {
@@ -526,7 +522,11 @@ describe("Scene", () => {
             expect(scene.status).toBe(GAME_STATUS.PLAYING)
             expect(requestAnimationFrame).toHaveBeenCalledTimes(1)
             expect(asMock(scene.music.play)).toHaveBeenCalledTimes(1)
-            expect(controls.sync).toHaveBeenCalledWith(GAME_STATUS.PLAYING)
+            expect(display.sync).toHaveBeenCalledWith(
+                GAME_STATUS.PLAYING,
+                0,
+                0,
+            )
         })
 
         it("stores arrow keys while playing", () => {
@@ -618,7 +618,11 @@ describe("Scene", () => {
             expect(scene.key).toEqual({})
             expect(cancelAnimationFrame).toHaveBeenCalledWith(77)
             expect(asMock(scene.music.stop)).not.toHaveBeenCalled()
-            expect(controls.sync).toHaveBeenCalledWith(GAME_STATUS.PAUSED)
+            expect(display.sync).toHaveBeenCalledWith(
+                GAME_STATUS.PAUSED,
+                0,
+                0,
+            )
         })
 
         it("does nothing when pause is called while idle", () => {
@@ -641,7 +645,11 @@ describe("Scene", () => {
             expect(scene.status).toBe(GAME_STATUS.PLAYING)
             expect(requestAnimationFrame).toHaveBeenCalledTimes(1)
             expect(asMock(scene.music.play)).toHaveBeenCalledTimes(1)
-            expect(controls.sync).toHaveBeenCalledWith(GAME_STATUS.PLAYING)
+            expect(display.sync).toHaveBeenCalledWith(
+                GAME_STATUS.PLAYING,
+                0,
+                0,
+            )
         })
 
         it("toggles pause with p and Escape", () => {
@@ -703,7 +711,11 @@ describe("Scene", () => {
             expect(scene.character.image.src).toBe(ICONS.MOVE_RIGHT)
             expect(scene.key).toEqual({})
             expect(requestAnimationFrame).toHaveBeenCalledTimes(1)
-            expect(controls.sync).toHaveBeenCalledWith(GAME_STATUS.PLAYING)
+            expect(display.sync).toHaveBeenCalledWith(
+                GAME_STATUS.PLAYING,
+                0,
+                0,
+            )
         })
 
         it("does not restart unless the scene has crashed", () => {
@@ -797,7 +809,11 @@ describe("Scene", () => {
             expect(scene.status).toBe(GAME_STATUS.CRASHED)
             expect(scene.key).toEqual({})
             expect(cancelAnimationFrame).toHaveBeenCalledWith(77)
-            expect(controls.sync).toHaveBeenCalledWith(GAME_STATUS.CRASHED)
+            expect(display.sync).toHaveBeenCalledWith(
+                GAME_STATUS.CRASHED,
+                0,
+                0,
+            )
         })
 
         it("saves floored time plus collected token points", () => {
@@ -1658,7 +1674,7 @@ describe("Scene", () => {
             scene.character.speedX = 4
             scene.character.speedY = -2
             scene.status = GAME_STATUS.PLAYING
-            asMock(scene.scoreHud.draw).mockImplementation((): void => {
+            asMock(scene.display.draw).mockImplementation((): void => {
                 order.push("hud")
             })
 
@@ -1696,7 +1712,7 @@ describe("Scene", () => {
                 scene.context,
                 TICK_MS,
             )
-            expect(asMock(scene.scoreHud.draw)).toHaveBeenCalledWith(
+            expect(asMock(scene.display.draw)).toHaveBeenCalledWith(
                 scene.context,
                 scene.score,
                 scene.topScores,

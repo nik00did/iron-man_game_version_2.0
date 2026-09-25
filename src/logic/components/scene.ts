@@ -27,8 +27,8 @@ import { Obstacle } from "./obstacle.ts"
 import { EnergyToken } from "./energyToken.ts"
 import Background from "./background"
 import { Sound } from "./sound.ts"
-import ScoreHud, { getTopScores, saveScore } from "./scoreHud"
-import { GameControls } from "./gameControls.ts"
+import { getTopScores, saveScore } from "./scoreHud"
+import { GameDisplay } from "./gameDisplay.ts"
 import Shooting from "./shooting"
 import { randomInt } from "../../utils.ts"
 
@@ -51,8 +51,7 @@ export class Scene {
     tokens: EnergyToken[]
     tokensCollected: number
     pendingEnergyToken: boolean
-    scoreHud: ScoreHud
-    controls: GameControls
+    display: GameDisplay
     topScores: number[]
     score: number
     music: Sound
@@ -90,13 +89,12 @@ export class Scene {
         this.tokens = []
         this.tokensCollected = 0
         this.pendingEnergyToken = false
-        this.scoreHud = new ScoreHud()
         this.topScores = getTopScores()
         this.score = 0
 
         this.music = new Sound(SOUNDS.FIRST_FIGHT)
         this.collisionSound = new Sound(SOUNDS.LOVE_ME_AGAIN)
-        this.controls = new GameControls(this.wrapper, {
+        this.display = new GameDisplay(this.wrapper, {
             onStart: (): void => this.play(),
             onPause: (): void => this.pause(),
             onResume: (): void => this.resume(),
@@ -121,13 +119,12 @@ export class Scene {
     mount(): void {
         document.body.insertBefore(this.wrapper, document.body.childNodes[0])
         this.bindInput()
-        this.syncControls()
+        this.syncDisplay()
         this.paintIdle()
     }
 
-    syncControls(): void {
-        this.controls.sync(this.status)
-        this.controls.setRunStats(this.score, this.shooting.ammo)
+    syncDisplay(): void {
+        this.display.sync(this.status, this.score, this.shooting.ammo)
     }
 
     async paintIdle(): Promise<void> {
@@ -215,7 +212,7 @@ export class Scene {
 
         this.status = GAME_STATUS.PLAYING
         this.startMusic()
-        this.syncControls()
+        this.syncDisplay()
         this.beginLoop()
     }
 
@@ -226,7 +223,7 @@ export class Scene {
         this.status = GAME_STATUS.PAUSED
         this.clearKeys()
         this.stopLoop()
-        this.syncControls()
+        this.syncDisplay()
     }
 
     resume(): void {
@@ -245,7 +242,7 @@ export class Scene {
         this.status = GAME_STATUS.PLAYING
         this.musicStarted = true
         this.music.playFromStart()
-        this.syncControls()
+        this.syncDisplay()
         this.beginLoop()
     }
 
@@ -438,7 +435,7 @@ export class Scene {
         this.clearKeys()
         this.status = GAME_STATUS.CRASHED
         this.stopLoop()
-        this.syncControls()
+        this.syncDisplay()
     }
 
     handleObstacleCollision(): void {
@@ -616,7 +613,7 @@ export class Scene {
 
         this.character.update(this.context)
         this.shooting.draw(this.context, this.elapsedMs())
-        this.scoreHud.draw(
+        this.display.draw(
             this.context,
             this.score,
             this.topScores,
