@@ -13,7 +13,7 @@ Version **2.1**. Author: [nik00did](https://github.com/nik00did).
 - **Space** — shoot (ammo from energy tokens, up to 3)
 - **P** or **Escape** — pause / resume
 
-Score is flight time plus collected tokens. The sky and obstacle speed step up every 40 seconds.
+Score is flight time plus collected tokens. The sky still shifts every 40 seconds. Obstacle speed increases after each 40s spawn window, once the screen has cleared and a 5s empty flight has passed.
 
 ## Setup
 

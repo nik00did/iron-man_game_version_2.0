@@ -13,8 +13,10 @@ import {
     GAME_KEYS,
     GAME_CONTROLS,
     SKY,
+    WAVE,
+    SPAWN_PHASE,
 } from "../../constants.ts"
-import type { GameStatus, ObstacleSpawn } from "../../constants.ts"
+import type { GameStatus, ObstacleSpawn, SpawnPhase } from "../../constants.ts"
 import type { Box } from "./sceneEntity.ts"
 import Character, {
     clampPlayerX,
@@ -23,7 +25,7 @@ import Character, {
 } from "./character"
 import { Obstacle } from "./obstacle.ts"
 import { EnergyToken } from "./energyToken.ts"
-import Background, { timePeriodIndex } from "./background"
+import Background from "./background"
 import { Sound } from "./sound.ts"
 import ScoreHud, { getTopScores, saveScore } from "./scoreHud"
 import { GameControls } from "./gameControls.ts"
@@ -58,6 +60,10 @@ export class Scene {
     character: Character
     background: Background
     shooting: Shooting
+    spawnPhase: SpawnPhase
+    speedBonus: number
+    waveFrameNo: number
+    pauseFrameNo: number
 
     constructor() {
         this.canvas = document.createElement("canvas")
@@ -106,6 +112,10 @@ export class Scene {
         })
         this.background = new Background()
         this.shooting = new Shooting()
+        this.spawnPhase = SPAWN_PHASE.SPAWNING
+        this.speedBonus = 0
+        this.waveFrameNo = 0
+        this.pauseFrameNo = 0
     }
 
     mount(): void {
@@ -315,14 +325,18 @@ export class Scene {
         this.character.fillColor = null
         this.character.image.src = ICONS.MOVE_RIGHT
         this.topScores = getTopScores()
+        this.spawnPhase = SPAWN_PHASE.SPAWNING
+        this.speedBonus = 0
+        this.waveFrameNo = 0
+        this.pauseFrameNo = 0
     }
 
     everyInterval(n: number): boolean {
-        return !!((this.frameNo / n) % 1 === 0)
+        return this.waveFrameNo !== 0 && (this.waveFrameNo / n) % 1 === 0
     }
 
     shouldAddObstacle(interval: number): boolean {
-        return this.frameNo === 1 || this.everyInterval(interval)
+        return this.waveFrameNo === 1 || this.everyInterval(interval)
     }
 
     spawnBaseSpeed(spawn: ObstacleSpawn): number {
@@ -359,7 +373,54 @@ export class Scene {
     }
 
     scrollSpeedBonus(): number {
-        return timePeriodIndex(this.elapsedMs()) * SKY.SPEED_STEP
+        return this.speedBonus
+    }
+
+    isSpawning(): boolean {
+        return this.spawnPhase === SPAWN_PHASE.SPAWNING
+    }
+
+    beginDrain(): void {
+        this.spawnPhase = SPAWN_PHASE.DRAINING
+        this.pendingEnergyToken = false
+    }
+
+    beginPause(): void {
+        this.spawnPhase = SPAWN_PHASE.PAUSED
+        this.pauseFrameNo = 0
+    }
+
+    beginNextWave(): void {
+        this.speedBonus += SKY.SPEED_STEP
+        this.spawnPhase = SPAWN_PHASE.SPAWNING
+        this.waveFrameNo = 1
+        this.pauseFrameNo = 0
+    }
+
+    updateSpawnPhase(): void {
+        if (this.spawnPhase === SPAWN_PHASE.SPAWNING) {
+            if (this.waveFrameNo * TICK_MS >= SKY.PERIOD_MS) {
+                this.beginDrain()
+
+                return
+            }
+
+            this.waveFrameNo += 1
+
+            return
+        }
+
+        if (this.spawnPhase === SPAWN_PHASE.DRAINING) {
+            if (this.obstacles.length === 0 && this.tokens.length === 0)
+                this.beginPause()
+
+            return
+        }
+
+        this.pauseFrameNo += 1
+
+        if (this.pauseFrameNo * TICK_MS >= WAVE.PAUSE_MS)
+            this.beginNextWave()
     }
 
     currentScore(): number {
@@ -391,6 +452,9 @@ export class Scene {
     }
 
     generateNewObstacles(): void {
+        if (!this.isSpawning())
+            return
+
         for (const spawn of OBSTACLES.SPAWNS) {
             if (!this.shouldAddObstacle(this.obstacleSpawnInterval(spawn)))
                 continue
@@ -398,7 +462,7 @@ export class Scene {
             const height =
                 "getHeight" in spawn ? spawn.getHeight() : spawn.height
             const y = spawn.getY(this.canvas, height)
-            const speedX =
+            const baseSpeed =
                 "getSpeed" in spawn ? spawn.getSpeed() : spawn.speedX
 
             this.obstacles.push(
@@ -409,7 +473,7 @@ export class Scene {
                     x: this.canvas.width,
                     y,
                     type: spawn.type,
-                    speedX,
+                    speedX: baseSpeed - this.scrollSpeedBonus(),
                 }),
             )
 
@@ -459,6 +523,9 @@ export class Scene {
     }
 
     maybeSpawnEnergyToken(): void {
+        if (!this.isSpawning())
+            return
+
         if (!this.pendingEnergyToken)
             return
 
@@ -478,6 +545,7 @@ export class Scene {
             new EnergyToken({
                 x: this.canvas.width,
                 y: randomInt(ENERGY_TOKEN.Y_MIN, maxY),
+                speedX: ENERGY_TOKEN.SPEED - this.scrollSpeedBonus(),
             }),
         )
         this.pendingEnergyToken = false
@@ -503,12 +571,8 @@ export class Scene {
         if (this.tokens.length === 0)
             return
 
-        const bonus = this.scrollSpeedBonus()
-
-        for (const token of this.tokens) {
-            token.applySpeedBonus(bonus)
+        for (const token of this.tokens)
             token.move()
-        }
 
         this.tokens = this.tokens.filter(
             (token): boolean => !token.isOffScreen(),
@@ -519,12 +583,8 @@ export class Scene {
         if (this.obstacles.length === 0) 
             return
 
-        const bonus = this.scrollSpeedBonus()
-
-        for (const obstacle of this.obstacles) {
-            obstacle.applySpeedBonus(bonus)
+        for (const obstacle of this.obstacles)
             obstacle.move()
-        }
 
         this.obstacles = this.obstacles.filter(
             (obstacle): boolean => !obstacle.isOffScreen(),
@@ -580,6 +640,8 @@ export class Scene {
 
         if (this.status === GAME_STATUS.PLAYING)
             this.score = this.currentScore()
+
+        this.updateSpawnPhase()
 
         if (OBSTACLES.ENABLED) {
             this.generateNewObstacles()
