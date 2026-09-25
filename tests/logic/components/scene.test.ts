@@ -15,6 +15,8 @@ import {
     SOUNDS,
     TICK_MS,
     SKY,
+    WAVE,
+    SPAWN_PHASE,
 } from "@src/constants.ts"
 import type { Obstacle } from "@src/logic/components/obstacle.ts"
 import type { ObstacleProps } from "@src/logic/components/obstacle.ts"
@@ -48,9 +50,8 @@ const CharacterMock = jest.fn()
 const ObstacleMock = jest.fn()
 const EnergyTokenMock = jest.fn()
 const Background = jest.fn()
-const ScoreHud = jest.fn()
 const Shooting = jest.fn()
-const GameControls = jest.fn()
+const GameDisplay = jest.fn()
 const getTopScores = jest.fn()
 const saveScore = jest.fn()
 
@@ -106,11 +107,9 @@ jest.unstable_mockModule(
 jest.unstable_mockModule(
     "@src/logic/components/scoreHud",
     (): {
-        default: jest.Mock
         getTopScores: jest.Mock
         saveScore: jest.Mock
     } => ({
-        default: ScoreHud,
         getTopScores,
         saveScore,
     }),
@@ -122,9 +121,9 @@ jest.unstable_mockModule(
     }),
 )
 jest.unstable_mockModule(
-    "@src/logic/components/gameControls.ts",
-    (): { GameControls: jest.Mock } => ({
-        GameControls,
+    "@src/logic/components/gameDisplay.ts",
+    (): { GameDisplay: jest.Mock } => ({
+        GameDisplay,
     }),
 )
 
@@ -155,7 +154,7 @@ describe("Scene", () => {
     let context: { clearRect: jest.Mock }
     let canvas: CanvasMock
     let wrapper: WrapperMock
-    let controls: { sync: jest.Mock; setRunStats: jest.Mock }
+    let display: { sync: jest.Mock; draw: jest.Mock }
 
     beforeEach(() => {
         context = { clearRect: jest.fn() }
@@ -168,7 +167,7 @@ describe("Scene", () => {
             className: "",
             appendChild: jest.fn(),
         }
-        controls = { sync: jest.fn(), setRunStats: jest.fn() }
+        display = { sync: jest.fn(), draw: jest.fn() }
 
         Sound.mockImplementation(
             (): {
@@ -290,9 +289,6 @@ describe("Scene", () => {
         Background.mockImplementation((): { update: jest.Mock } => ({
             update: jest.fn(),
         }))
-        ScoreHud.mockImplementation((): { draw: jest.Mock } => ({
-            draw: jest.fn(),
-        }))
         Shooting.mockImplementation(
             (): {
                 blasts: unknown[]
@@ -318,7 +314,7 @@ describe("Scene", () => {
                 clear: jest.fn(),
             }),
         )
-        GameControls.mockImplementation(() => controls)
+        GameDisplay.mockImplementation(() => display)
         getTopScores.mockReset()
         saveScore.mockReset()
         getTopScores.mockReturnValue([12, 8, 3])
@@ -329,11 +325,10 @@ describe("Scene", () => {
         ObstacleMock.mockClear()
         EnergyTokenMock.mockClear()
         Background.mockClear()
-        ScoreHud.mockClear()
         Shooting.mockClear()
-        GameControls.mockClear()
-        controls.sync.mockClear()
-        controls.setRunStats.mockClear()
+        GameDisplay.mockClear()
+        display.sync.mockClear()
+        display.draw.mockClear()
 
         Object.defineProperty(globalThis, "document", {
             configurable: true,
@@ -384,7 +379,7 @@ describe("Scene", () => {
             expect(canvas.getContext).toHaveBeenCalledWith("2d")
             expect(Sound).toHaveBeenCalledWith(SOUNDS.FIRST_FIGHT)
             expect(Sound).toHaveBeenCalledWith(SOUNDS.LOVE_ME_AGAIN)
-            expect(GameControls).toHaveBeenCalledTimes(1)
+            expect(GameDisplay).toHaveBeenCalledTimes(1)
             expect(CharacterMock).toHaveBeenCalledWith({
                 width: 50,
                 height: 50,
@@ -393,7 +388,6 @@ describe("Scene", () => {
                 y: CANVAS.height / 2,
             })
             expect(Background).toHaveBeenCalledTimes(1)
-            expect(ScoreHud).toHaveBeenCalledTimes(1)
             expect(Shooting).toHaveBeenCalledTimes(1)
             expect(getTopScores).toHaveBeenCalledTimes(1)
             expect(scene.topScores).toEqual([12, 8, 3])
@@ -405,6 +399,10 @@ describe("Scene", () => {
             expect(scene.pendingEnergyToken).toBe(false)
             expect(scene.status).toBe(GAME_STATUS.IDLE)
             expect(scene.musicStarted).toBe(false)
+            expect(scene.spawnPhase).toBe(SPAWN_PHASE.SPAWNING)
+            expect(scene.speedBonus).toBe(0)
+            expect(scene.waveFrameNo).toBe(0)
+            expect(scene.pauseFrameNo).toBe(0)
         })
     })
 
@@ -421,7 +419,11 @@ describe("Scene", () => {
             expect(scene.status).toBe(GAME_STATUS.IDLE)
             expect(requestAnimationFrame).not.toHaveBeenCalled()
             expect(asMock(scene.character.whenReady)).toHaveBeenCalledTimes(1)
-            expect(controls.sync).toHaveBeenCalledWith(GAME_STATUS.IDLE)
+            expect(display.sync).toHaveBeenCalledWith(
+                GAME_STATUS.IDLE,
+                0,
+                0,
+            )
             expect(window.addEventListener).toHaveBeenCalledWith(
                 "keydown",
                 expect.any(Function),
@@ -492,7 +494,7 @@ describe("Scene", () => {
             expect(asMock(scene.character.update)).toHaveBeenCalledWith(
                 scene.context,
             )
-            expect(asMock(scene.scoreHud.draw)).toHaveBeenCalled()
+            expect(asMock(scene.display.draw)).toHaveBeenCalled()
         })
 
         it("does not paint if the game started before images loaded", async () => {
@@ -520,7 +522,11 @@ describe("Scene", () => {
             expect(scene.status).toBe(GAME_STATUS.PLAYING)
             expect(requestAnimationFrame).toHaveBeenCalledTimes(1)
             expect(asMock(scene.music.play)).toHaveBeenCalledTimes(1)
-            expect(controls.sync).toHaveBeenCalledWith(GAME_STATUS.PLAYING)
+            expect(display.sync).toHaveBeenCalledWith(
+                GAME_STATUS.PLAYING,
+                0,
+                0,
+            )
         })
 
         it("stores arrow keys while playing", () => {
@@ -612,7 +618,11 @@ describe("Scene", () => {
             expect(scene.key).toEqual({})
             expect(cancelAnimationFrame).toHaveBeenCalledWith(77)
             expect(asMock(scene.music.stop)).not.toHaveBeenCalled()
-            expect(controls.sync).toHaveBeenCalledWith(GAME_STATUS.PAUSED)
+            expect(display.sync).toHaveBeenCalledWith(
+                GAME_STATUS.PAUSED,
+                0,
+                0,
+            )
         })
 
         it("does nothing when pause is called while idle", () => {
@@ -635,7 +645,11 @@ describe("Scene", () => {
             expect(scene.status).toBe(GAME_STATUS.PLAYING)
             expect(requestAnimationFrame).toHaveBeenCalledTimes(1)
             expect(asMock(scene.music.play)).toHaveBeenCalledTimes(1)
-            expect(controls.sync).toHaveBeenCalledWith(GAME_STATUS.PLAYING)
+            expect(display.sync).toHaveBeenCalledWith(
+                GAME_STATUS.PLAYING,
+                0,
+                0,
+            )
         })
 
         it("toggles pause with p and Escape", () => {
@@ -682,6 +696,10 @@ describe("Scene", () => {
             expect(scene.status).toBe(GAME_STATUS.PLAYING)
             expect(scene.frameNo).toBe(0)
             expect(scene.score).toBe(0)
+            expect(scene.spawnPhase).toBe(SPAWN_PHASE.SPAWNING)
+            expect(scene.speedBonus).toBe(0)
+            expect(scene.waveFrameNo).toBe(0)
+            expect(scene.pauseFrameNo).toBe(0)
             expect(scene.obstacles).toEqual([])
             expect(scene.tokens).toEqual([])
             expect(scene.tokensCollected).toBe(0)
@@ -693,7 +711,11 @@ describe("Scene", () => {
             expect(scene.character.image.src).toBe(ICONS.MOVE_RIGHT)
             expect(scene.key).toEqual({})
             expect(requestAnimationFrame).toHaveBeenCalledTimes(1)
-            expect(controls.sync).toHaveBeenCalledWith(GAME_STATUS.PLAYING)
+            expect(display.sync).toHaveBeenCalledWith(
+                GAME_STATUS.PLAYING,
+                0,
+                0,
+            )
         })
 
         it("does not restart unless the scene has crashed", () => {
@@ -787,7 +809,11 @@ describe("Scene", () => {
             expect(scene.status).toBe(GAME_STATUS.CRASHED)
             expect(scene.key).toEqual({})
             expect(cancelAnimationFrame).toHaveBeenCalledWith(77)
-            expect(controls.sync).toHaveBeenCalledWith(GAME_STATUS.CRASHED)
+            expect(display.sync).toHaveBeenCalledWith(
+                GAME_STATUS.CRASHED,
+                0,
+                0,
+            )
         })
 
         it("saves floored time plus collected token points", () => {
@@ -818,18 +844,26 @@ describe("Scene", () => {
     })
 
     describe("everyInterval", () => {
-        it("returns true when frameNo is a multiple of n", () => {
+        it("returns true when waveFrameNo is a multiple of n", () => {
             const scene = new Scene()
-            scene.frameNo = 10
+            scene.waveFrameNo = 10
 
             const result = scene.everyInterval(5)
 
             expect(result).toBe(true)
         })
 
-        it("returns false when frameNo is not a multiple of n", () => {
+        it("returns false when waveFrameNo is not a multiple of n", () => {
             const scene = new Scene()
-            scene.frameNo = 11
+            scene.waveFrameNo = 11
+
+            const result = scene.everyInterval(5)
+
+            expect(result).toBe(false)
+        })
+
+        it("returns false on wave frame 0", () => {
+            const scene = new Scene()
 
             const result = scene.everyInterval(5)
 
@@ -838,9 +872,9 @@ describe("Scene", () => {
     })
 
     describe("shouldAddObstacle", () => {
-        it("returns true on the first frame", () => {
+        it("returns true on the first wave frame", () => {
             const scene = new Scene()
-            scene.frameNo = 1
+            scene.waveFrameNo = 1
 
             const result = scene.shouldAddObstacle(999)
 
@@ -849,7 +883,7 @@ describe("Scene", () => {
 
         it("returns true when the interval matches", () => {
             const scene = new Scene()
-            scene.frameNo = 10
+            scene.waveFrameNo = 10
 
             const result = scene.shouldAddObstacle(5)
 
@@ -866,9 +900,9 @@ describe("Scene", () => {
             expect(scene.obstacleSpawnInterval(OBSTACLES.SPAWNS[2])).toBe(100)
         })
 
-        it("shortens the interval as scroll speed increases", () => {
+        it("shortens the interval as wave speed increases", () => {
             const scene = new Scene()
-            scene.frameNo = SKY.PERIOD_MS / TICK_MS
+            scene.speedBonus = SKY.SPEED_STEP
 
             expect(scene.obstacleSpawnInterval(OBSTACLES.SPAWNS[0])).toBe(188)
             expect(scene.obstacleSpawnInterval(OBSTACLES.SPAWNS[1])).toBe(532)
@@ -934,7 +968,7 @@ describe("Scene", () => {
         it("pushes an Obstacle for each spawn when shouldAddObstacle is true", () => {
             const random = jest.spyOn(Math, "random").mockReturnValue(0)
             const scene = new Scene()
-            scene.frameNo = 1
+            scene.waveFrameNo = 1
 
             scene.generateNewObstacles()
 
@@ -972,6 +1006,38 @@ describe("Scene", () => {
             random.mockRestore()
         })
 
+        it("applies the current wave bonus when spawning", () => {
+            const random = jest.spyOn(Math, "random").mockReturnValue(0)
+            const scene = new Scene()
+            scene.waveFrameNo = 1
+            scene.speedBonus = SKY.SPEED_STEP
+
+            scene.generateNewObstacles()
+
+            expect(ObstacleMock).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: ENTITY_TYPE.CLOUD,
+                    speedX: -3 - SKY.SPEED_STEP,
+                }),
+            )
+            random.mockRestore()
+        })
+
+        it("does not spawn during drain or pause", () => {
+            const scene = new Scene()
+            scene.waveFrameNo = 1
+            scene.spawnPhase = SPAWN_PHASE.DRAINING
+
+            scene.generateNewObstacles()
+
+            expect(scene.obstacles).toEqual([])
+
+            scene.spawnPhase = SPAWN_PHASE.PAUSED
+            scene.generateNewObstacles()
+
+            expect(scene.obstacles).toEqual([])
+        })
+
         it("does not push obstacles when shouldAddObstacle is false", () => {
             const scene = new Scene()
             jest.spyOn(scene, "shouldAddObstacle").mockReturnValue(false)
@@ -984,7 +1050,7 @@ describe("Scene", () => {
         it("does not spawn a token when only one building exists", () => {
             const random = jest.spyOn(Math, "random").mockReturnValue(0)
             const scene = new Scene()
-            scene.frameNo = 1
+            scene.waveFrameNo = 1
 
             scene.generateNewObstacles()
 
@@ -1050,8 +1116,36 @@ describe("Scene", () => {
             expect(EnergyTokenMock).toHaveBeenCalledWith({
                 x: CANVAS.width,
                 y: ENERGY_TOKEN.Y_MIN,
+                speedX: ENERGY_TOKEN.SPEED,
             })
             random.mockRestore()
+        })
+
+        it("applies the current wave bonus to spawned tokens", () => {
+            const random = jest.spyOn(Math, "random").mockReturnValue(0)
+            const scene = new Scene()
+            scene.pendingEnergyToken = true
+            scene.speedBonus = SKY.SPEED_STEP
+
+            scene.maybeSpawnEnergyToken()
+
+            expect(EnergyTokenMock).toHaveBeenCalledWith({
+                x: CANVAS.width,
+                y: ENERGY_TOKEN.Y_MIN,
+                speedX: ENERGY_TOKEN.SPEED - SKY.SPEED_STEP,
+            })
+            random.mockRestore()
+        })
+
+        it("does not spawn tokens while draining or paused", () => {
+            const scene = new Scene()
+            scene.pendingEnergyToken = true
+            scene.spawnPhase = SPAWN_PHASE.DRAINING
+
+            scene.maybeSpawnEnergyToken()
+
+            expect(scene.tokens).toEqual([])
+            expect(scene.pendingEnergyToken).toBe(true)
         })
 
         it("does not queue a token when the gap chance fails", () => {
@@ -1138,17 +1232,15 @@ describe("Scene", () => {
             expect(scene.obstacles).toEqual([kept])
         })
 
-        it("speeds up on-screen obstacles when a sky period elapses", () => {
+        it("does not change the speed of obstacles already on screen", () => {
             const scene = new Scene()
-            scene.frameNo = SKY.PERIOD_MS / TICK_MS
+            scene.speedBonus = SKY.SPEED_STEP
             const obstacle = {
                 x: 10,
                 speedX: -3,
                 baseSpeedX: -3,
                 width: 5,
-                applySpeedBonus(bonus: number): void {
-                    this.speedX = this.baseSpeedX - bonus
-                },
+                applySpeedBonus: jest.fn(),
                 move(): void {
                     this.x += this.speedX
                 },
@@ -1160,8 +1252,9 @@ describe("Scene", () => {
 
             scene.updateObstaclesPosition()
 
-            expect(obstacle.speedX).toBe(-3 - SKY.SPEED_STEP)
-            expect(obstacle.x).toBe(6)
+            expect(obstacle.applySpeedBonus).not.toHaveBeenCalled()
+            expect(obstacle.speedX).toBe(-3)
+            expect(obstacle.x).toBe(7)
         })
     })
 
@@ -1247,25 +1340,15 @@ describe("Scene", () => {
             expect(scene.tokens).toEqual([kept])
         })
 
-        it("speeds up on-screen tokens when a sky period elapses", () => {
+        it("does not change the speed of tokens already on screen", () => {
             const scene = new Scene()
-            scene.frameNo = SKY.PERIOD_MS / TICK_MS
-            const token: {
-                x: number
-                speedX: number
-                baseSpeedX: number
-                width: number
-                applySpeedBonus(bonus: number): void
-                move(): void
-                isOffScreen(): boolean
-            } = {
+            scene.speedBonus = SKY.SPEED_STEP
+            const token = {
                 x: 10,
                 speedX: ENERGY_TOKEN.SPEED,
                 baseSpeedX: ENERGY_TOKEN.SPEED,
                 width: ENERGY_TOKEN.SIZE,
-                applySpeedBonus(bonus: number): void {
-                    this.speedX = this.baseSpeedX - bonus
-                },
+                applySpeedBonus: jest.fn(),
                 move(): void {
                     this.x += this.speedX
                 },
@@ -1277,8 +1360,71 @@ describe("Scene", () => {
 
             scene.updateTokensPosition()
 
-            expect(token.speedX).toBe(ENERGY_TOKEN.SPEED - SKY.SPEED_STEP)
-            expect(token.x).toBe(10 + ENERGY_TOKEN.SPEED - SKY.SPEED_STEP)
+            expect(token.applySpeedBonus).not.toHaveBeenCalled()
+            expect(token.speedX).toBe(ENERGY_TOKEN.SPEED)
+            expect(token.x).toBe(10 + ENERGY_TOKEN.SPEED)
+        })
+    })
+
+    describe("updateSpawnPhase", () => {
+        it("increments the wave frame while spawning", () => {
+            const scene = new Scene()
+
+            scene.updateSpawnPhase()
+
+            expect(scene.spawnPhase).toBe(SPAWN_PHASE.SPAWNING)
+            expect(scene.waveFrameNo).toBe(1)
+            expect(scene.speedBonus).toBe(0)
+        })
+
+        it("starts draining after a spawn window and keeps leftover speed", () => {
+            const scene = new Scene()
+            scene.waveFrameNo = SKY.PERIOD_MS / TICK_MS
+            scene.pendingEnergyToken = true
+            scene.obstacles = [asObstacle({ speedX: -3 })]
+
+            scene.updateSpawnPhase()
+
+            expect(scene.spawnPhase).toBe(SPAWN_PHASE.DRAINING)
+            expect(scene.pendingEnergyToken).toBe(false)
+            expect(scene.speedBonus).toBe(0)
+            expect(scene.obstacles[0].speedX).toBe(-3)
+        })
+
+        it("starts the empty pause when the screen is clear", () => {
+            const scene = new Scene()
+            scene.spawnPhase = SPAWN_PHASE.DRAINING
+            scene.obstacles = []
+            scene.tokens = []
+
+            scene.updateSpawnPhase()
+
+            expect(scene.spawnPhase).toBe(SPAWN_PHASE.PAUSED)
+            expect(scene.pauseFrameNo).toBe(0)
+        })
+
+        it("stays draining while anything is still on screen", () => {
+            const scene = new Scene()
+            scene.spawnPhase = SPAWN_PHASE.DRAINING
+            scene.obstacles = [asObstacle({ speedX: -3 })]
+
+            scene.updateSpawnPhase()
+
+            expect(scene.spawnPhase).toBe(SPAWN_PHASE.DRAINING)
+            expect(scene.speedBonus).toBe(0)
+        })
+
+        it("raises speed only after the pause, then spawns again", () => {
+            const scene = new Scene()
+            scene.spawnPhase = SPAWN_PHASE.PAUSED
+            scene.pauseFrameNo = WAVE.PAUSE_MS / TICK_MS - 1
+            scene.speedBonus = 0
+
+            scene.updateSpawnPhase()
+
+            expect(scene.spawnPhase).toBe(SPAWN_PHASE.SPAWNING)
+            expect(scene.speedBonus).toBe(SKY.SPEED_STEP)
+            expect(scene.waveFrameNo).toBe(1)
         })
     })
 
@@ -1528,7 +1674,7 @@ describe("Scene", () => {
             scene.character.speedX = 4
             scene.character.speedY = -2
             scene.status = GAME_STATUS.PLAYING
-            asMock(scene.scoreHud.draw).mockImplementation((): void => {
+            asMock(scene.display.draw).mockImplementation((): void => {
                 order.push("hud")
             })
 
@@ -1551,6 +1697,7 @@ describe("Scene", () => {
                 "hud",
             ])
             expect(scene.frameNo).toBe(1)
+            expect(scene.waveFrameNo).toBe(1)
             expect(scene.score).toBe(0)
             expect(scene.character.speedX).toBe(0)
             expect(scene.character.speedY).toBe(0)
@@ -1565,7 +1712,7 @@ describe("Scene", () => {
                 scene.context,
                 TICK_MS,
             )
-            expect(asMock(scene.scoreHud.draw)).toHaveBeenCalledWith(
+            expect(asMock(scene.display.draw)).toHaveBeenCalledWith(
                 scene.context,
                 scene.score,
                 scene.topScores,
@@ -1583,6 +1730,18 @@ describe("Scene", () => {
             scene.update()
 
             expect(generateNewObstacles).not.toHaveBeenCalled()
+        })
+
+        it("keeps scoring after the spawn window closes", () => {
+            const scene = new Scene()
+            scene.status = GAME_STATUS.PLAYING
+            scene.spawnPhase = SPAWN_PHASE.DRAINING
+            scene.frameNo = 49
+
+            scene.update()
+
+            expect(scene.score).toBe(1)
+            expect(scene.spawnPhase).toBe(SPAWN_PHASE.PAUSED)
         })
     })
 })

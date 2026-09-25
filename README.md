@@ -4,7 +4,7 @@ A canvas side-scroller built with Vite and TypeScript. Fly, dodge buildings, pla
 
 Play it here: [https://nik00did.github.io/iron-man_game_version_2.0/](https://nik00did.github.io/iron-man_game_version_2.0/)
 
-Version **2.1**. Author: [nik00did](https://github.com/nik00did).
+Version **2.2**. Author: [nik00did](https://github.com/nik00did).
 
 ## Play
 
@@ -13,7 +13,7 @@ Version **2.1**. Author: [nik00did](https://github.com/nik00did).
 - **Space** — shoot (ammo from energy tokens, up to 3)
 - **P** or **Escape** — pause / resume
 
-Score is flight time plus collected tokens. The sky and obstacle speed step up every 40 seconds.
+Score is flight time plus collected tokens. The sky still shifts every 40 seconds. Obstacle speed increases after each 40s spawn window, once the screen has cleared and a 5s empty flight has passed.
 
 ## Setup
 

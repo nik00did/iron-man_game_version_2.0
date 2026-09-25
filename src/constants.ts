@@ -73,6 +73,18 @@ export const SKY = {
     ] as const satisfies readonly SkyStop[],
 }
 
+export const WAVE = {
+    PAUSE_MS: 5_000,
+}
+
+export const SPAWN_PHASE = {
+    SPAWNING: "spawning",
+    DRAINING: "draining",
+    PAUSED: "paused",
+} as const
+
+export type SpawnPhase = (typeof SPAWN_PHASE)[keyof typeof SPAWN_PHASE]
+
 export const SCORE_HUD = {
     STORAGE_KEY: "iron-man.topScores",
     MAX_RECORDS: 3,
