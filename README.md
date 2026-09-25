@@ -4,7 +4,7 @@ A canvas side-scroller built with Vite and TypeScript. Fly, dodge buildings, pla
 
 Play it here: [https://nik00did.github.io/iron-man_game_version_2.0/](https://nik00did.github.io/iron-man_game_version_2.0/)
 
-Version **2.1**. Author: [nik00did](https://github.com/nik00did).
+Version **2.2**. Author: [nik00did](https://github.com/nik00did).
 
 ## Play
 
